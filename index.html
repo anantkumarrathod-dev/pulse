@@ -1,0 +1,2878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pulse — Scrum & Workforce Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* --- THEMES --- */
+  :root, [data-theme="obsidian"] {
+    --bg-base: #080A0F;
+    --bg-surface: #0E121A;
+    --bg-panel: #141924;
+    --bg-panel-elevated: #1B2232;
+    --bg-panel-hover: #222B3E;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-bright: rgba(255, 255, 255, 0.16);
+    --border-focus: #3B82F6;
+    --text-primary: #F3F4F6;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+    --blue: #3B82F6;
+    --blue-glow: rgba(59, 130, 246, 0.25);
+    --green: #10B981;
+    --green-glow: rgba(16, 185, 129, 0.25);
+    --orange: #F59E0B;
+    --orange-glow: rgba(245, 158, 11, 0.25);
+    --red: #EF4444;
+    --red-glow: rgba(239, 68, 68, 0.25);
+    --purple: #A855F7;
+    --purple-glow: rgba(168, 85, 247, 0.25);
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.4);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.6);
+  }
+
+  [data-theme="nordic"] {
+    --bg-base: #CBD5E1;
+    --bg-surface: #F8FAFC;
+    --bg-panel: #FFFFFF;
+    --bg-panel-elevated: #F1F5F9;
+    --bg-panel-hover: #E2E8F0;
+    --border: rgba(15, 23, 42, 0.08);
+    --border-bright: rgba(15, 23, 42, 0.16);
+    --border-focus: #4F46E5;
+    --text-primary: #0F172A;
+    --text-secondary: #334155;
+    --text-muted: #64748B;
+    --blue: #4F46E5;
+    --blue-glow: rgba(79, 70, 229, 0.15);
+    --green: #0D9488;
+    --green-glow: rgba(13, 148, 136, 0.15);
+    --orange: #D97706;
+    --red: #DC2626;
+    --purple: #7C3AED;
+    --shadow-sm: 0 2px 8px rgba(15,23,42,0.06);
+    --shadow-lg: 0 12px 32px rgba(15,23,42,0.12);
+  }
+
+  [data-theme="nebula"] {
+    --bg-base: #070913;
+    --bg-surface: #0B0E1B;
+    --bg-panel: #13182E;
+    --bg-panel-elevated: #1C2340;
+    --bg-panel-hover: #262F52;
+    --border: rgba(139, 92, 246, 0.15);
+    --border-bright: rgba(139, 92, 246, 0.3);
+    --border-focus: #8B5CF6;
+    --text-primary: #F8FAFC;
+    --text-secondary: #A5B4FC;
+    --text-muted: #818CF8;
+    --blue: #6366F1;
+    --blue-glow: rgba(99, 102, 241, 0.3);
+    --green: #10B981;
+    --green-glow: rgba(16, 185, 129, 0.3);
+    --orange: #F59E0B;
+    --red: #EC4899;
+    --purple: #8B5CF6;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.5);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.7);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    margin: 0;
+    background: var(--bg-base);
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 16px;
+    -webkit-font-smoothing: antialiased;
+    transition: background 0.25s ease, color 0.25s ease;
+  }
+
+  /* Scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+
+  .app-container {
+    max-width: 1560px;
+    margin: 0 auto;
+    background: var(--bg-surface);
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: background 0.25s ease, border-color 0.25s ease;
+  }
+
+  /* Active Timer Sticky Header */
+  .active-timer-bar {
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.15), rgba(59, 130, 246, 0.15));
+    border-bottom: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 8px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12.5px;
+    animation: slideDown 0.25s ease;
+  }
+  .active-timer-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 10px var(--green);
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse { 0% { opacity: 0.4; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.15); } 100% { opacity: 0.4; transform: scale(0.9); } }
+  @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  /* App Header */
+  .header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    background: var(--bg-panel);
+    backdrop-filter: blur(12px);
+    transition: background 0.25s ease;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-logo {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--blue), var(--purple));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 17px;
+    color: #fff;
+    box-shadow: 0 4px 12px var(--blue-glow);
+  }
+  .brand-text h1 { font-size: 17px; font-weight: 800; letter-spacing: -0.4px; }
+  .brand-text p { font-size: 11px; color: var(--text-muted); }
+
+  /* Search & Command Bar Trigger */
+  .quick-search-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 14px;
+    color: var(--text-muted);
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    min-width: 200px;
+  }
+  .quick-search-trigger:hover { border-color: var(--border-bright); color: var(--text-primary); }
+  .kbd-badge {
+    background: var(--bg-panel-elevated);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-secondary);
+    margin-left: auto;
+  }
+
+  /* Navigation Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-surface);
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .tab:hover { color: var(--text-primary); }
+  .tab.active {
+    background: var(--bg-panel-elevated);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Theme Switcher & Control Buttons */
+  .header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .theme-btn {
+    background: var(--bg-panel-elevated);
+    border: 1px solid var(--border-bright);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+  }
+  .theme-btn:hover { transform: translateY(-1px); border-color: var(--blue); }
+
+  .notif-btn {
+    position: relative;
+    background: var(--bg-panel-elevated);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .notif-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--red);
+    color: #fff;
+    font-size: 9.5px;
+    font-weight: 800;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Viewer Selector */
+  .viewer-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 4px 10px;
+  }
+
+  /* Stats Bar */
+  .stats-bar {
+    padding: 16px 24px 0;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .stat-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    min-width: 130px;
+    flex: 1 1 140px;
+    transition: transform 0.15s ease, border-color 0.15s ease, background 0.25s ease;
+  }
+  .stat-card:hover { transform: translateY(-2px); border-color: var(--border-bright); }
+  .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+  .stat-value { font-size: 20px; font-weight: 800; margin-top: 4px; font-family: 'Plus Jakarta Sans', sans-serif; }
+
+  /* Sprint Velocity Banner & SVG Chart */
+  .sprint-velocity-bar {
+    margin: 16px 24px 0;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    transition: background 0.25s ease;
+  }
+
+  /* Content & Kanban Grid */
+  .main-content { padding: 18px 24px 24px; flex: 1; overflow-x: auto; }
+  .board-grid-wrapper { width: 100%; overflow-x: auto; padding-bottom: 8px; }
+  .board-grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(240px, 1fr);
+    gap: 14px;
+    align-items: flex-start;
+    min-width: 100%;
+  }
+  .column {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px;
+    min-height: 520px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  .column.drag-over {
+    background: rgba(59, 130, 246, 0.08);
+    border: 1px dashed var(--blue);
+  }
+  .column-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 6px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .col-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .col-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .col-badge {
+    background: var(--bg-panel-elevated);
+    border-radius: 20px;
+    padding: 2px 7px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  .cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    min-height: 80px;
+  }
+
+  /* Task Card */
+  .taskcard {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    padding: 12px;
+    cursor: grab;
+    transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.18s ease, background 0.25s ease;
+    position: relative;
+    user-select: none;
+  }
+  .taskcard:active { cursor: grabbing; }
+  .taskcard:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-bright);
+    box-shadow: var(--shadow-sm);
+  }
+  .taskcard.dragging {
+    opacity: 0.4;
+    transform: scale(0.96) rotate(1deg);
+    border: 1px dashed var(--blue);
+  }
+
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--text-primary);
+  }
+  .pills-row { display: flex; align-items: center; gap: 6px; margin: 8px 0; flex-wrap: wrap; }
+  .pill {
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .tag-badge {
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .avatar-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--bg-panel-elevated);
+    padding: 2px 7px;
+    border-radius: 6px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  /* Table View & Floating Bulk Toolbar */
+  .table-view-container {
+    width: 100%;
+    overflow-x: auto;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    position: relative;
+  }
+  .pulse-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    text-align: left;
+  }
+  .pulse-table th {
+    background: var(--bg-panel-elevated);
+    padding: 12px 14px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .pulse-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .pulse-table tr:hover td { background: var(--bg-panel-hover); }
+
+  .bulk-bar {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-panel-elevated);
+    border: 1px solid var(--blue);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.8);
+    border-radius: 14px;
+    padding: 10px 20px;
+    z-index: 1500;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    animation: slideUp 0.2s ease;
+  }
+  @keyframes slideUp { from { transform: translate(-50%, 20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+
+  /* Subtasks Progress Mini Bar */
+  .subtasks-bar-box {
+    margin-top: 8px;
+    font-size: 10.5px;
+    color: var(--text-muted);
+  }
+  .mini-progress-track {
+    height: 4px;
+    background: var(--bg-surface);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 3px;
+  }
+  .mini-progress-fill { height: 100%; background: var(--green); transition: width 0.2s ease; }
+
+  /* Inputs, Buttons, Selects */
+  .btn {
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+  }
+  .btn:hover { opacity: 0.92; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn-blue { background: var(--blue); color: #fff; box-shadow: 0 2px 8px var(--blue-glow); }
+  .btn-green { background: var(--green); color: #fff; box-shadow: 0 2px 8px var(--green-glow); }
+  .btn-purple { background: var(--purple); color: #fff; box-shadow: 0 2px 8px var(--purple-glow); }
+  .btn-red { background: var(--red); color: #fff; }
+  .btn-dark { background: var(--bg-panel-elevated); border: 1px solid var(--border); color: var(--text-primary); }
+  .btn-dark:hover { background: var(--bg-panel-hover); border-color: var(--border-bright); }
+  .btn-icon { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 6px; font-size: 13px; }
+  .btn-icon:hover { color: var(--text-primary); background: var(--bg-panel-elevated); }
+
+  .txt {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text-primary);
+    font-size: 13px;
+    transition: border-color 0.15s ease;
+  }
+  .txt:focus { outline: none; border-color: var(--border-focus); }
+  .sel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 12.5px;
+    cursor: pointer;
+  }
+  .sel:focus { outline: none; border-color: var(--border-focus); }
+
+  /* Modals & Backdrop */
+  .modal-backdrop {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(5, 7, 12, 0.75);
+    backdrop-filter: blur(6px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.15s ease;
+  }
+  .modal-window {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-bright);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 780px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: scaleUp 0.18s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  .modal-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-panel);
+  }
+  .modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    background: var(--bg-panel);
+  }
+
+  /* Command Palette Modal */
+  .cmd-window {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-bright);
+    border-radius: 16px;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.85);
+    width: 100%;
+    max-width: 600px;
+    overflow: hidden;
+    animation: scaleUp 0.15s ease;
+  }
+  .cmd-input-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-panel);
+  }
+  .cmd-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-size: 15px;
+    width: 100%;
+  }
+  .cmd-list {
+    max-height: 380px;
+    overflow-y: auto;
+    padding: 10px;
+  }
+  .cmd-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background 0.1s ease;
+  }
+  .cmd-item.selected, .cmd-item:hover {
+    background: var(--bg-panel-elevated);
+    color: var(--text-primary);
+  }
+  .cmd-group-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    padding: 8px 14px 4px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Toast Notification */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .toast {
+    background: var(--bg-panel-elevated);
+    border: 1px solid var(--border-bright);
+    color: var(--text-primary);
+    padding: 12px 18px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-lg);
+    font-size: 12.5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: toastIn 0.2s ease, toastOut 0.25s ease 2.75s forwards;
+    pointer-events: auto;
+  }
+  @keyframes toastIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes toastOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(20px); opacity: 0; } }
+
+  /* Checklists / Subtasks in Modal */
+  .checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-size: 12.5px;
+  }
+  .checklist-item.done span {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+
+  /* Workload and other tabs */
+  .grid-team { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .bar-outer { height: 7px; background: var(--bg-surface); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+  .bar-inner { height: 100%; }
+  .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+  .daycell { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px; min-height: 180px; }
+  .guide-panel { width: 320px; border-left: 1px solid var(--border); background: var(--bg-surface); overflow-y: auto; max-height: 800px; flex-shrink: 0; }
+  .flex { display: flex; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row-between { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .mini { font-size: 11px; color: var(--text-secondary); }
+  .labeled { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-muted); }
+  textarea { width: 100%; resize: vertical; font-family: inherit; }
+  .lock-banner { font-size: 11.5px; color: var(--text-muted); margin-bottom: 16px; background: rgba(239,68,68,0.1); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(239,68,68,0.2); }
+</style>
+</head>
+<body data-theme="obsidian">
+
+<div class="app-container" id="app"></div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// --- Constants & Config ---
+const DEFAULT_PEOPLE = ["AR", "RS", "UN", "AJ", "ASG", "AG", "VR", "MM", "LS", "BB", "GC", "Unassigned"];
+const DEFAULT_ROLES = {
+  AR: "Product Owner", ASG: "Scrum Master", UN: "Platform Administrator", BB: "Manager", MM: "Team Lead",
+  AJ: "Employee", AG: "Employee", VR: "Employee", LS: "Employee", RS: "Employee", GC: "Employee", Unassigned: "—"
+};
+const ROLE_OPTIONS = ["Employee", "Product Owner", "Scrum Master", "Team Lead", "Manager", "Platform Administrator"];
+const ROLE_RATES = { "Product Owner": 75, "Scrum Master": 65, "Platform Administrator": 70, "Manager": 80, "Team Lead": 60, "Employee": 45, "—": 30 };
+
+const DEFAULT_WIP_LIMITS = { "To Do": 999, "WIP": 999, "Pending": 999, "Due": 999, "Done": 999 };
+
+const DEFAULT_TAGS = [
+  { id: "tag-frontend", name: "Frontend", color: "#3B82F6" },
+  { id: "tag-backend", name: "Backend", color: "#A855F7" },
+  { id: "tag-design", name: "Design", color: "#EC4899" },
+  { id: "tag-marketing", name: "Marketing", color: "#F59E0B" },
+  { id: "tag-bug", name: "Bug", color: "#EF4444" },
+  { id: "tag-research", name: "Research", color: "#10B981" }
+];
+
+// Restricted Confidential Roles (Administrator & Scrum Leadership)
+const CONFIDENTIAL_ROLES = ["UN", "ASG"];
+const PRIORITIES = ["P0", "P1", "P2", "P3"];
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const APPROVAL_STAGES = ["Draft", "Pending Approval", "Approved", "Rejected", "Changes Requested", "Closed"];
+const WORK_MODES = ["Online", "Offline", "On-field"];
+const WEEKLY_CAPACITY_MINS = 2400;
+const PRIORITY_EST = { P0: 120, P1: 90, P2: 60, P3: 30 };
+const PRIORITY_COLOR = { P0: "#EF4444", P1: "#F59E0B", P2: "#3B82F6", P3: "#6B7280" };
+const STATUS_COLOR = { "To Do": "#6B7280", WIP: "#3B82F6", Pending: "#A855F7", Due: "#F59E0B", Done: "#10B981" };
+const APPROVAL_COLOR = { Draft: "#6B7280", "Pending Approval": "#F59E0B", Approved: "#10B981", Rejected: "#EF4444", "Changes Requested": "#A855F7", Closed: "#3B82F6" };
+
+const THEMES = [
+  { id: "obsidian", label: "🌌 Obsidian Cyber" },
+  { id: "nordic", label: "☀️ Nordic Light" },
+  { id: "nebula", label: "🔮 Midnight Nebula" }
+];
+
+const RAW_SEED = [
+  ["Projects", "IMS ACE Olympiad", "P0", "WIP", ["tag-frontend", "tag-design"]],
+  ["Projects", "Outreach Roadmap", "P1", "To Do", ["tag-marketing"]],
+  ["Projects", "Landing Page", "P0", "WIP", ["tag-frontend"]],
+  ["Projects", "PR Rx", "P1", "To Do", ["tag-marketing"]],
+  ["Projects", "Marketing Roadmap", "P2", "To Do", ["tag-marketing"]],
+  ["Projects", "Outreach School Visits: Rukmini", "P2", "To Do", ["tag-research"]],
+  ["Projects", "WBR MBA", "P0", "Due", ["tag-backend"]],
+  ["Projects", "SF Hygiene", "P0", "To Do", ["tag-bug"]],
+  ["Projects", "Pending Dues Update", "P0", "Pending", ["tag-backend"]],
+  ["Projects", "Lead Mapping", "P1", "To Do", ["tag-research"]],
+  ["Projects", "TOI x IMS x ACE Olympiad", "P0", "WIP", ["tag-marketing"]],
+  ["Projects", "ACE Seminar Collateral & Training", "P0", "To Do", ["tag-design"]],
+  ["Projects", "Event Schedule", "P0", "To Do", ["tag-research"]],
+  ["Projects", "Event Props & Venue", "P0", "To Do", ["tag-design"]],
+  ["Projects", "Event Task Allocation - Test Day Team", "P2", "To Do", ["tag-research"]],
+  ["Projects", "Olympiad Sample Paper Design", "P0", "WIP", ["tag-design"]],
+  ["Projects", "Event Proposal - For Schools", "P1", "To Do", ["tag-marketing"]],
+  ["Projects", "School Seminar Presentation", "P0", "WIP", ["tag-design"]],
+  ["Projects", "TOI MoU Deliverables", "P0", "Due", ["tag-backend"]],
+  ["Projects", "Venue Proposal", "P1", "To Do", ["tag-research"]],
+  ["Projects", "Counseling - Batch Group", "P2", "To Do", ["tag-marketing"]],
+  ["Projects", "Tuition Seminar", "P1", "To Do", ["tag-research"]],
+  ["Projects", "Unstop Feasibility vs Self-hosting", "P1", "Pending", ["tag-backend"]],
+  ["Projects", "College List Website", "P1", "To Do", ["tag-frontend"]],
+  ["Projects", "Rudra Student Address Brief", "P0", "Due", ["tag-marketing"]],
+  ["Projects", "Beyond IIM BS", "P3", "To Do", ["tag-research"]],
+  ["Projects", "Marketing Calendar Jaipur 2026-27", "P2", "To Do", ["tag-marketing"]],
+  ["Projects", "AEO Rx", "P2", "To Do", ["tag-backend"]],
+  ["Ops", "SMM Leads", "P1", "To Do", ["tag-marketing"]],
+  ["Ops", "Front Desk Drill", "P0", "Done", ["tag-research"]],
+  ["Ops", "Acad Coordination - Batch Planning", "P0", "WIP", ["tag-research"]],
+  ["Ops", "Updating Sheets", "P0", "Done", ["tag-backend"]],
+  ["Ops", "Meeting AR<>Team, AR<>AG, AR<>UN", "P1", "To Do", ["tag-research"]],
+  ["Ops", "PR Follow Up", "P0", "To Do", ["tag-marketing"]],
+  ["Ops", "Review Seminar Feedback", "P0", "Pending", ["tag-research"]],
+  ["Ad hoc", "Daily Task Allocation", "P0", "WIP", ["tag-research"]],
+  ["Ad hoc", "Telephonic Enquiry", "P1", "To Do", ["tag-marketing"]],
+  ["Ad hoc", "Follow Up Calls - Counseling SMM/SEM", "P0", "To Do", ["tag-marketing"]],
+  ["Ad hoc", "Counseling Training", "P0", "To Do", ["tag-research"]],
+  ["Ad hoc", "Content Ideas - AG", "P2", "To Do", ["tag-design"]],
+];
+
+const GUIDE = [
+  { title: "1. Intuitive Navigation", steps: ["Tab labels are clean and uncluttered. Keyboard shortcuts (B, T, C, M, D, R, N, Ctrl+K) work intuitively in the background."] },
+  { title: "2. WIP Limits & Burndown Chart", steps: ["Visual burndown curve graph in Sprint Banner. Column WIP limits prevent team overload."] },
+  { title: "3. Dependency Flow Map", steps: ["Switch to the 🔗 Flow Map tab to view visual prerequisite tree diagrams."] },
+  { title: "4. Multi-Select Bulk Actions", steps: ["Use checkboxes in 📊 Table View to bulk move, reassign, or export tickets."] }
+];
+
+// --- Helpers ---
+function dateKey(d) { return d.toISOString().slice(0, 10); }
+function todayKey() { return dateKey(new Date()); }
+function fmtMins(m) { const h = Math.floor(m / 60), mm = Math.round(m % 60); return h > 0 ? `${h}h ${mm}m` : `${mm}m`; }
+function fmtTimer(seconds) {
+  const h = Math.floor(seconds / 3600), m = Math.floor((seconds % 3600) / 60), s = Math.floor(seconds % 60);
+  return `${h > 0 ? h + ':' : ''}${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
+}
+function fmtDate(d) { return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }); }
+function getWeekStart(offset = 0) {
+  const now = new Date(); const day = now.getDay();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1) + offset * 7);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+}
+function batteryInfo(pct) {
+  const p = Math.max(0, Math.min(100, Math.round(pct)));
+  if (p <= 40) return { p, level: "Available", color: "#10B981" };
+  if (p <= 70) return { p, level: "Healthy", color: "#3B82F6" };
+  if (p <= 90) return { p, level: "High Utilization", color: "#F59E0B" };
+  return { p, level: "Fully Utilized", color: "#EF4444" };
+}
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+
+function showToast(msg, icon = "✓") {
+  const el = document.getElementById("toastContainer");
+  if (!el) return;
+  const t = document.createElement("div");
+  t.className = "toast";
+  t.innerHTML = `<span>${icon}</span> <span>${esc(msg)}</span>`;
+  el.appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+
+function seedTasks() {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return RAW_SEED.map((r, i) => {
+    let dueDate = null;
+    if (r[3] === "Done") { const d = new Date(today); d.setDate(d.getDate() - 7 + (i % 5)); dueDate = dateKey(d); }
+    else if (r[3] === "WIP") { const d = new Date(today); d.setDate(d.getDate() + (i % 5)); dueDate = dateKey(d); }
+    const sprint = i % 5 === 0 ? "Backlog" : i % 2 === 0 ? "Sprint 14 (Current)" : "Sprint 15 (Next)";
+    return {
+      id: "t" + i, category: r[0], title: r[1], description: `Comprehensive execution requirements for ${r[1]}.`,
+      priority: r[2], status: r[3], sprint, tags: r[4] || [],
+      assignee: i % 3 === 0 ? "AR" : i % 3 === 1 ? "AJ" : "UN",
+      contributor2: "Unassigned", reviewer: "ASG",
+      estimateMins: PRIORITY_EST[r[2]],
+      loggedMins: r[3] === "Done" ? Math.round(PRIORITY_EST[r[2]] * 0.7) : r[3] === "WIP" ? Math.round(PRIORITY_EST[r[2]] * 0.35) : 0,
+      timerStart: null, timerMode: "Online",
+      subtasks: [
+        { id: "s1", text: "Initial scoping & review", done: r[3] === "Done" || r[3] === "WIP" },
+        { id: "s2", text: "Execution & verification", done: r[3] === "Done" }
+      ],
+      blockers: i === 2 ? ["t1"] : [],
+      comments: [],
+      activity: [{ ts: Date.now() - (i * 3600000), text: "Ticket initialized" }],
+      dueDate, requiresApproval: i % 4 === 0, approvalStatus: (i % 4 === 0) ? (r[3] === "Done" ? "Approved" : "Pending Approval") : null
+    };
+  });
+}
+
+function load(key, fallback) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; } }
+function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
+
+// --- App State ---
+let state = {
+  theme: load("pulse-theme", "obsidian"),
+  sprintMode: load("pulse-sprint-mode-v1", "scrum"),
+  categories: load("pulse-categories", ["Projects", "Ops", "Ad hoc"]),
+  statuses: load("pulse-statuses", ["To Do", "WIP", "Pending", "Due", "Done"]),
+  wipLimits: load("pulse-wip-limits-v2", DEFAULT_WIP_LIMITS),
+  sprints: load("pulse-sprints-v1", ["Sprint 14 (Current)", "Sprint 15 (Next)", "Backlog"]),
+  tags: load("pulse-tags-v1", DEFAULT_TAGS),
+  people: load("pulse-people-v1", DEFAULT_PEOPLE),
+  roles: load("pulse-roles-v1", DEFAULT_ROLES),
+  roleRates: load("pulse-role-rates", ROLE_RATES),
+  tasks: load("pulse-tasks-v6", null) || seedTasks(),
+  meetings: load("pulse-meetings-v5", []),
+  recharge: load("pulse-recharge-v5", {}),
+  confidential: load("pulse-confidential-v5", {}),
+  view: "board",
+  boardMode: "kanban",
+  selectedTaskIds: [],
+  viewer: "AR",
+  filterPerson: "All",
+  filterCat: "All",
+  filterSprint: "All",
+  filterTag: "All",
+  searchQuery: "",
+  newTaskOpen: false,
+  detailTaskId: null,
+  rebalanceModalPerson: null,
+  settingsOpen: false,
+  notifOpen: false,
+  cmdOpen: false,
+  cmdQuery: "",
+  cmdSelectedIndex: 0,
+  draft: { title: "", description: "", category: "Projects", priority: "P1", sprint: "Sprint 14 (Current)", tags: [], assignee: "Unassigned", contributor2: "Unassigned", reviewer: "Unassigned", requiresApproval: false },
+  meetingDraft: null,
+  guideOpen: false,
+  calWeek: 0,
+  calDraft: null,
+  calDraftTitle: "",
+  draggedTaskId: null,
+  startModes: {}
+};
+
+// Ensure statuses always has Done
+if (!state.statuses.includes("Done")) {
+  state.statuses.push("Done");
+}
+
+function applyTheme(themeId) {
+  document.body.setAttribute("data-theme", themeId);
+}
+
+function cycleTheme() {
+  const currentIndex = THEMES.findIndex(t => t.id === state.theme);
+  const nextTheme = THEMES[(currentIndex + 1) % THEMES.length];
+  state.theme = nextTheme.id;
+  applyTheme(nextTheme.id);
+  save("pulse-theme", nextTheme.id);
+  showToast(`Switched Theme to ${nextTheme.label}`, "🎨");
+  render();
+}
+
+function persist() {
+  save("pulse-sprint-mode-v1", state.sprintMode);
+  save("pulse-categories", state.categories);
+  save("pulse-statuses", state.statuses);
+  save("pulse-wip-limits-v1", state.wipLimits);
+  save("pulse-sprints-v1", state.sprints);
+  save("pulse-tags-v1", state.tags);
+  save("pulse-people-v1", state.people);
+  save("pulse-roles-v1", state.roles);
+  save("pulse-role-rates", state.roleRates);
+  save("pulse-tasks-v6", state.tasks);
+  save("pulse-meetings-v5", state.meetings);
+  save("pulse-recharge-v5", state.recharge);
+  save("pulse-confidential-v5", state.confidential);
+}
+
+function setState(patch, skipFullRender = false) {
+  Object.assign(state, patch);
+  if (!skipFullRender) render();
+  persist();
+}
+
+function getTaskCost(t) {
+  const role = state.roles[t.assignee] || "Employee";
+  const rate = state.roleRates[role] || 45;
+  const estCost = Math.round((t.estimateMins / 60) * rate);
+  const loggedCost = Math.round((liveLogged(t) / 60) * rate);
+  return { estCost, loggedCost, rate };
+}
+
+function liveLogged(t) { return t.timerStart ? t.loggedMins + (Date.now() - t.timerStart) / 60000 : t.loggedMins; }
+function logActivity(t, text) { return [...(t.activity || []), { ts: Date.now(), text: `[${state.viewer}] ${text}` }]; }
+
+function updateTask(id, patch, note, silentInModal = false) {
+  state.tasks = state.tasks.map(t => {
+    if (t.id !== id) return t;
+    const nt = { ...t, ...patch };
+    if (note) nt.activity = logActivity(t, note);
+    return nt;
+  });
+  if (silentInModal && state.detailTaskId === id) {
+    updateModalDOM(id);
+    persist();
+  } else {
+    render(); persist();
+  }
+}
+
+function updateModalDOM(taskId) {
+  const t = state.tasks.find(x => x.id === taskId);
+  if (!t) return;
+  const modalEl = document.getElementById("modalBodyContent");
+  if (modalEl) modalEl.innerHTML = renderDetailModalBody(t);
+}
+
+function deleteTask(id) {
+  const t = state.tasks.find(x => x.id === id);
+  state.tasks = state.tasks.filter(x => x.id !== id);
+  state.selectedTaskIds = state.selectedTaskIds.filter(x => x !== id);
+  if (state.detailTaskId === id) state.detailTaskId = null;
+  showToast(`Deleted ticket: "${t?.title || id}"`, "🗑");
+  render(); persist();
+}
+
+function toggleTimer(id) {
+  const mode = state.startModes[id] || "Online";
+  state.tasks = state.tasks.map(t => {
+    if (t.id !== id) {
+      if (t.timerStart) {
+        const elapsed = (Date.now() - t.timerStart) / 60000;
+        return { ...t, timerStart: null, loggedMins: t.loggedMins + elapsed };
+      }
+      return t;
+    }
+    if (t.timerStart) {
+      const elapsed = (Date.now() - t.timerStart) / 60000;
+      showToast(`Paused timer on "${t.title}" (+${fmtMins(elapsed)})`, "⏸");
+      return { ...t, timerStart: null, loggedMins: t.loggedMins + elapsed };
+    }
+    showToast(`Timer started on "${t.title}" (${mode})`, "⏱");
+    return { ...t, timerStart: Date.now(), timerMode: mode };
+  });
+  if (state.detailTaskId === id) updateModalDOM(id);
+  render(); persist();
+}
+
+function addManualTime(id, mins) {
+  state.tasks = state.tasks.map(t => {
+    if (t.id !== id) return t;
+    return { ...t, loggedMins: t.loggedMins + mins, activity: logActivity(t, `Logged +${fmtMins(mins)} manually`) };
+  });
+  showToast(`Added +${fmtMins(mins)} to ticket`, "⏳");
+  if (state.detailTaskId === id) updateModalDOM(id);
+  else render();
+  persist();
+}
+
+function addComment(id, text) {
+  if (!text || !text.trim()) return;
+  state.tasks = state.tasks.map(t => {
+    if (t.id !== id) return t;
+    return {
+      ...t,
+      comments: [...(t.comments || []), { author: state.viewer, text: text.trim(), ts: Date.now() }],
+      activity: logActivity(t, "Added comment")
+    };
+  });
+  showToast("Comment posted", "💬");
+  if (state.detailTaskId === id) updateModalDOM(id);
+  else render();
+  persist();
+}
+
+function toggleSubtask(taskId, subtaskId) {
+  state.tasks = state.tasks.map(t => {
+    if (t.id !== taskId) return t;
+    const subtasks = (t.subtasks || []).map(s => s.id === subtaskId ? { ...s, done: !s.done } : s);
+    return { ...t, subtasks };
+  });
+  if (state.detailTaskId === taskId) updateModalDOM(taskId);
+  else render();
+  persist();
+}
+
+function addSubtask(taskId, text) {
+  if (!text.trim()) return;
+  state.tasks = state.tasks.map(t => {
+    if (t.id !== taskId) return t;
+    const subtasks = [...(t.subtasks || []), { id: "s" + Date.now(), text: text.trim(), done: false }];
+    return { ...t, subtasks, activity: logActivity(t, `Added subtask: "${text.trim()}"`) };
+  });
+  if (state.detailTaskId === taskId) updateModalDOM(taskId);
+  else render();
+  persist();
+}
+
+function toggleBlocker(taskId, blockerId) {
+  state.tasks = state.tasks.map(t => {
+    if (t.id !== taskId) return t;
+    const blockers = t.blockers || [];
+    const updated = blockers.includes(blockerId) ? blockers.filter(b => b !== blockerId) : [...blockers, blockerId];
+    return { ...t, blockers: updated, activity: logActivity(t, `Updated blockers`) };
+  });
+  if (state.detailTaskId === taskId) updateModalDOM(taskId);
+  else render();
+  persist();
+}
+
+function toggleTicketTag(taskId, tagId) {
+  state.tasks = state.tasks.map(t => {
+    if (t.id !== taskId) return t;
+    const tags = t.tags || [];
+    const updated = tags.includes(tagId) ? tags.filter(tg => tg !== tagId) : [...tags, tagId];
+    return { ...t, tags: updated, activity: logActivity(t, `Updated tags`) };
+  });
+  if (state.detailTaskId === taskId) updateModalDOM(taskId);
+  else render();
+  persist();
+}
+
+function addCustomTag(name, color) {
+  const cleanName = name.trim();
+  if (!cleanName) return;
+  const tagId = "tag-" + Date.now();
+  state.tags.push({ id: tagId, name: cleanName, color: color || "#3B82F6" });
+  showToast(`Added custom tag: "${cleanName}"`, "🏷️");
+  render(); persist();
+}
+
+function removeCustomTag(tagId) {
+  state.tags = state.tags.filter(tg => tg.id !== tagId);
+  state.tasks = state.tasks.map(t => ({ ...t, tags: (t.tags || []).filter(tg => tg !== tagId) }));
+  showToast("Removed tag", "🗑");
+  render(); persist();
+}
+
+// --- Bulk Operations ---
+function toggleTaskSelection(id) {
+  if (state.selectedTaskIds.includes(id)) {
+    state.selectedTaskIds = state.selectedTaskIds.filter(x => x !== id);
+  } else {
+    state.selectedTaskIds.push(id);
+  }
+  render();
+}
+
+function toggleAllTaskSelection(filteredTasks) {
+  if (state.selectedTaskIds.length === filteredTasks.length) {
+    state.selectedTaskIds = [];
+  } else {
+    state.selectedTaskIds = filteredTasks.map(t => t.id);
+  }
+  render();
+}
+
+function bulkMoveStatus(status) {
+  if (state.selectedTaskIds.length === 0) return;
+  state.tasks = state.tasks.map(t => state.selectedTaskIds.includes(t.id) ? { ...t, status, activity: logActivity(t, `Bulk moved to ${status}`) } : t);
+  showToast(`Bulk moved ${state.selectedTaskIds.length} ticket(s) to ${status}`, "🚀");
+  state.selectedTaskIds = [];
+  render(); persist();
+}
+
+function bulkReassign(assignee) {
+  if (state.selectedTaskIds.length === 0) return;
+  state.tasks = state.tasks.map(t => state.selectedTaskIds.includes(t.id) ? { ...t, assignee, activity: logActivity(t, `Bulk reassigned to ${assignee}`) } : t);
+  showToast(`Bulk reassigned ${state.selectedTaskIds.length} ticket(s) to ${assignee}`, "👤");
+  state.selectedTaskIds = [];
+  render(); persist();
+}
+
+function bulkDelete() {
+  if (state.selectedTaskIds.length === 0) return;
+  const count = state.selectedTaskIds.length;
+  state.tasks = state.tasks.filter(t => !state.selectedTaskIds.includes(t.id));
+  showToast(`Bulk deleted ${count} ticket(s)`, "🗑");
+  state.selectedTaskIds = [];
+  render(); persist();
+}
+
+function addTask() {
+  const d = state.draft;
+  if (!d.title.trim()) return;
+  const defaultSprint = state.sprintMode === "continuous" ? "Continuous Stream" : (d.sprint || state.sprints[0] || "Sprint 14 (Current)");
+  const newTask = {
+    id: "t" + Date.now(), category: d.category, title: d.title.trim(), description: d.description || "",
+    priority: d.priority, status: state.statuses[0] || "To Do", sprint: defaultSprint, tags: d.tags || [], assignee: d.assignee, contributor2: d.contributor2, reviewer: d.reviewer,
+    estimateMins: PRIORITY_EST[d.priority], loggedMins: 0, timerStart: null, timerMode: "Online",
+    subtasks: [], blockers: [], comments: [], activity: [{ ts: Date.now(), text: `[${state.viewer}] Ticket created` }],
+    dueDate: null, requiresApproval: d.requiresApproval, approvalStatus: d.requiresApproval ? "Draft" : null
+  };
+  state.tasks.unshift(newTask);
+  state.draft = { title: "", description: "", category: "Projects", priority: "P1", sprint: state.sprints[0] || "Sprint 14 (Current)", tags: [], assignee: "Unassigned", contributor2: "Unassigned", reviewer: "Unassigned", requiresApproval: false };
+  state.newTaskOpen = false;
+  showToast(`Created ticket: "${newTask.title}"`, "✨");
+  render(); persist();
+}
+
+function addMember(code, role) {
+  const cleanCode = code.trim().toUpperCase();
+  if (!cleanCode) return;
+  if (state.people.includes(cleanCode)) {
+    showToast(`Member "${cleanCode}" already exists!`, "⚠️");
+    return;
+  }
+  const unIdx = state.people.indexOf("Unassigned");
+  if (unIdx !== -1) state.people.splice(unIdx, 0, cleanCode);
+  else state.people.push(cleanCode);
+
+  state.roles[cleanCode] = role;
+  showToast(`Added team member "${cleanCode}" (${role})`, "👤");
+  render(); persist();
+}
+
+function removeMember(code) {
+  if (code === "Unassigned") return;
+  state.people = state.people.filter(p => p !== code);
+  delete state.roles[code];
+  if (state.viewer === code) state.viewer = "UN";
+  showToast(`Removed team member "${code}"`, "🗑");
+  render(); persist();
+}
+
+function exportFullBackupJSON() {
+  const backupData = {
+    version: "4.0", timestamp: new Date().toISOString(), theme: state.theme, sprintMode: state.sprintMode,
+    categories: state.categories, statuses: state.statuses, wipLimits: state.wipLimits, sprints: state.sprints, tags: state.tags,
+    people: state.people, roles: state.roles, roleRates: state.roleRates,
+    tasks: state.tasks, meetings: state.meetings, recharge: state.recharge, confidential: state.confidential
+  };
+  const jsonStr = JSON.stringify(backupData, null, 2);
+  const blob = new Blob([jsonStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `pulse_backup_${todayKey()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast("Exported full workspace backup JSON", "📦");
+}
+
+function triggerJSONRestore() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".json";
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        if (data.tasks) state.tasks = data.tasks;
+        if (data.tags) state.tags = data.tags;
+        if (data.wipLimits) state.wipLimits = data.wipLimits;
+        if (data.sprintMode) state.sprintMode = data.sprintMode;
+        if (data.categories) state.categories = data.categories;
+        if (data.statuses) state.statuses = data.statuses;
+        if (data.sprints) state.sprints = data.sprints;
+        if (data.people) state.people = data.people;
+        if (data.roles) state.roles = data.roles;
+        if (data.roleRates) state.roleRates = data.roleRates;
+        if (data.meetings) state.meetings = data.meetings;
+        showToast("Successfully restored workspace from backup!", "🎉");
+        render(); persist();
+      } catch (err) {
+        showToast("Invalid JSON backup file", "❌");
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function convertMeetingActionItemsToTickets(meetingId) {
+  const m = state.meetings.find(x => x.id === meetingId);
+  if (!m || !m.actionItems || !m.actionItems.trim()) {
+    showToast("No action items written in meeting notes!", "⚠️");
+    return;
+  }
+  const lines = m.actionItems.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+  let createdCount = 0;
+
+  lines.forEach(line => {
+    let assignee = "Unassigned";
+    state.people.forEach(p => {
+      if (p !== "Unassigned" && (line.includes(`@${p}`) || line.toLowerCase().includes(p.toLowerCase()))) {
+        assignee = p;
+      }
+    });
+
+    const cleanTitle = line.replace(/@[A-Z]+/g, "").trim();
+    if (cleanTitle) {
+      state.tasks.unshift({
+        id: "t" + Date.now() + Math.random().toString(36).substring(2, 5),
+        category: "Ad hoc", title: cleanTitle, description: `Action item created from meeting: "${m.title}"`,
+        priority: "P1", status: state.statuses[0] || "To Do", sprint: state.sprintMode === "continuous" ? "Continuous Stream" : (state.sprints[0] || "Sprint 14 (Current)"), tags: [], assignee, contributor2: "Unassigned", reviewer: "ASG",
+        estimateMins: 60, loggedMins: 0, timerStart: null, timerMode: "Online", subtasks: [], blockers: [], comments: [],
+        activity: [{ ts: Date.now(), text: `[${state.viewer}] Converted from meeting "${m.title}"` }],
+        dueDate: m.date, requiresApproval: false, approvalStatus: null
+      });
+      createdCount++;
+    }
+  });
+
+  showToast(`Converted ${createdCount} action item(s) into Kanban tickets!`, "⚡");
+  state.view = "board";
+  render(); persist();
+}
+
+function executeSmartRebalance(overloadedPerson) {
+  const openTasks = state.tasks.filter(t => t.assignee === overloadedPerson && t.status !== "Done" && (t.priority === "P2" || t.priority === "P3"));
+  const wd = workloadData();
+  const availablePeople = wd.filter(w => w.battery.p <= 40).map(w => w.name);
+
+  if (openTasks.length === 0) {
+    showToast(`No non-urgent P2/P3 tasks available to offload for ${overloadedPerson}.`, "ℹ️");
+    return;
+  }
+  if (availablePeople.length === 0) {
+    showToast(`No team members currently under 40% capacity available.`, "⚠️");
+    return;
+  }
+
+  let count = 0;
+  openTasks.forEach((t, index) => {
+    const targetPerson = availablePeople[index % availablePeople.length];
+    updateTask(t.id, { assignee: targetPerson }, `Smart Rebalanced from ${overloadedPerson} → ${targetPerson}`);
+    count++;
+  });
+
+  state.rebalanceModalPerson = null;
+  showToast(`Successfully reallocated ${count} task(s) from ${overloadedPerson}!`, "⚡");
+  render(); persist();
+}
+
+function addCalTask(dk) {
+  if (!state.calDraftTitle.trim()) return;
+  state.tasks.push({
+    id: "t" + Date.now(), category: "Ad hoc", title: state.calDraftTitle.trim(), description: "",
+    priority: "P2", status: state.statuses[0] || "To Do", sprint: state.sprintMode === "continuous" ? "Continuous Stream" : (state.sprints[0] || "Sprint 14 (Current)"), tags: [], assignee: "Unassigned", contributor2: "Unassigned", reviewer: "Unassigned",
+    estimateMins: 60, loggedMins: 0, timerStart: null, timerMode: "Online", subtasks: [], blockers: [], comments: [],
+    activity: [{ ts: Date.now(), text: `[${state.viewer}] Ticket created` }], dueDate: dk, requiresApproval: false, approvalStatus: null
+  });
+  showToast(`Scheduled task on ${dk}`, "📅");
+  state.calDraft = null; state.calDraftTitle = "";
+  render(); persist();
+}
+
+function openMeetingFor(taskId) {
+  const task = state.tasks.find(t => t.id === taskId);
+  const participants = task ? [task.assignee, task.contributor2].filter(p => p && p !== "Unassigned") : [];
+  state.meetingDraft = { title: task ? `Sync: ${task.title}` : "", agenda: "", objective: "", participants, link: "", duration: 15, ticketId: task ? task.id : null };
+  state.view = "meetings";
+  render();
+}
+
+function saveMeeting() {
+  const md = state.meetingDraft;
+  if (!md || !md.title.trim()) return;
+  state.meetings.push({ id: "m" + Date.now(), ...md, date: todayKey(), notes: "", decisions: "", actionItems: "" });
+  state.meetingDraft = null;
+  showToast(`Meeting "${md.title}" saved`, "🎥");
+  render(); persist();
+}
+function updateMeeting(id, field, value) { state.meetings = state.meetings.map(m => m.id === id ? { ...m, [field]: value } : m); persist(); }
+function deleteMeeting(id) { state.meetings = state.meetings.filter(m => m.id !== id); render(); persist(); }
+
+// --- Drag and Drop Handlers ---
+function onDragStart(e, id) {
+  state.draggedTaskId = id;
+  e.dataTransfer.effectAllowed = "move";
+  e.dataTransfer.setData("text/plain", id);
+  setTimeout(() => {
+    const el = document.getElementById("card-" + id);
+    if (el) el.classList.add("dragging");
+  }, 0);
+}
+function onDragEnd(e, id) {
+  state.draggedTaskId = null;
+  document.querySelectorAll(".taskcard").forEach(c => c.classList.remove("dragging"));
+  document.querySelectorAll(".column").forEach(col => col.classList.remove("drag-over"));
+}
+function onDragOver(e, status) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+  const col = document.getElementById("col-" + status);
+  if (col) col.classList.add("drag-over");
+}
+function onDragLeave(e, status) {
+  const col = document.getElementById("col-" + status);
+  if (col) col.classList.remove("drag-over");
+}
+function onDrop(e, status) {
+  e.preventDefault();
+  const id = e.dataTransfer.getData("text/plain") || state.draggedTaskId;
+  document.querySelectorAll(".column").forEach(col => col.classList.remove("drag-over"));
+  if (!id) return;
+  const task = state.tasks.find(t => t.id === id);
+  if (task && task.status !== status) {
+    updateTask(id, { status }, `Moved status to ${status} via Drag & Drop`);
+    showToast(`"${task.title}" → ${status}`, "🚀");
+  }
+}
+
+// --- CSV Reports ---
+function toCSV(rows) { return rows.map(r => r.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\n"); }
+function downloadCSV(filename, rows) {
+  const csv = toCSV(rows); const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob); const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
+  showToast(`Exported ${filename}`, "📥");
+}
+function exportTickets() {
+  const isAdmin = CONFIDENTIAL_ROLES.includes(state.viewer);
+  downloadCSV("tickets_report.csv", [
+    ["ID", "Title", "Category", "Priority", "Status", "Sprint", "Tags", "Owner", ...(isAdmin ? ["Est. Cost ($)", "Logged Cost ($)"] : []), "Due Date"],
+    ...state.tasks.map(t => {
+      const c = getTaskCost(t);
+      const tagNames = (t.tags || []).map(tid => state.tags.find(tg => tg.id === tid)?.name || tid).join("; ");
+      return [t.id, t.title, t.category, t.priority, t.status, t.sprint || "Continuous Stream", tagNames, t.assignee, ...(isAdmin ? [`$${c.estCost}`, `$${c.loggedCost}`] : []), t.dueDate || ""];
+    })
+  ]);
+}
+function exportUtilization() {
+  const isAdmin = CONFIDENTIAL_ROLES.includes(state.viewer);
+  downloadCSV("team_utilization.csv", [
+    ["Person", "Role", ...(isAdmin ? ["Hourly Rate ($)"] : []), "Open", "Done", "Logged(min)", "Battery %", "Battery Level"],
+    ...workloadData().map(p => [p.name, state.roles[p.name] || "Employee", ...(isAdmin ? [`$${state.roleRates[state.roles[p.name]] || 45}`] : []), p.open, p.done, p.mins, p.battery.p, p.battery.level])
+  ]);
+}
+function exportApprovals() {
+  downloadCSV("approval_status.csv", [
+    ["Title", "Owner", "Approval Status", "Due Date"],
+    ...state.tasks.filter(t => t.requiresApproval).map(t => [t.title, t.assignee, t.approvalStatus, t.dueDate || ""])
+  ]);
+}
+function exportMeetings() {
+  downloadCSV("meeting_metrics.csv", [
+    ["Title", "Date", "Duration(min)", "Participants", "Linked Ticket"],
+    ...state.meetings.map(m => [m.title, m.date, m.duration, (m.participants || []).join("; "), state.tasks.find(t => t.id === m.ticketId)?.title || ""])
+  ]);
+}
+function exportBurnout() {
+  const wd = workloadData().filter(w => w.battery.level === "High Utilization" || w.battery.level === "Fully Utilized");
+  downloadCSV("burnout_risk.csv", [
+    ["Person", "Battery %", "Battery Level", "Recharge Status"],
+    ...wd.map(p => [p.name, p.battery.p, p.battery.level, state.recharge[p.name]?.status || "Not requested"])
+  ]);
+}
+
+function personOpenRemaining(p) { return state.tasks.filter(t => t.status !== "Done" && [t.assignee, t.contributor2].includes(p)).reduce((a, t) => a + Math.max(0, t.estimateMins - liveLogged(t)), 0); }
+function workloadData() {
+  return state.people.filter(p => p !== "Unassigned").map(p => {
+    const pt = state.tasks.filter(t => [t.assignee, t.contributor2].includes(p));
+    const battery = batteryInfo((personOpenRemaining(p) / WEEKLY_CAPACITY_MINS) * 100);
+    return { name: p, open: pt.filter(t => t.status !== "Done").length, done: pt.filter(t => t.status === "Done").length, mins: Math.round(pt.reduce((a, t) => a + liveLogged(t), 0)), battery };
+  });
+}
+
+function getUnreadNotifications() {
+  const notifs = [];
+  state.tasks.filter(t => t.requiresApproval && t.approvalStatus === "Pending Approval").forEach(t => {
+    notifs.push({ type: "approval", title: `Approval Requested: "${t.title}"`, time: "Action Required", taskId: t.id });
+  });
+  workloadData().filter(w => w.battery.p > 70).forEach(w => {
+    notifs.push({ type: "capacity", title: `Burnout Alert: ${w.name} is at ${w.battery.p}% capacity!`, time: "Capacity Overload" });
+  });
+  state.tasks.filter(t => (t.blockers || []).some(bid => { const bt = state.tasks.find(x => x.id === bid); return bt && bt.status !== "Done"; })).forEach(t => {
+    notifs.push({ type: "blocker", title: `Task Blocked: "${t.title}" has unresolved prerequisites!`, time: "Blocked", taskId: t.id });
+  });
+  return notifs;
+}
+
+// --- Main Render Logic ---
+function render() {
+  applyTheme(state.theme);
+  const tasks = state.tasks;
+  const isAdmin = CONFIDENTIAL_ROLES.includes(state.viewer);
+  const totalTasks = tasks.length, doneTasks = tasks.filter(t => t.status === "Done").length;
+  const wipTasks = tasks.filter(t => t.status === "WIP").length, dueTasks = tasks.filter(t => t.status === "Due" || t.status === "Pending").length;
+  const totalLogged = tasks.reduce((a, t) => a + liveLogged(t), 0);
+  const totalLoggedCost = tasks.reduce((a, t) => a + getTaskCost(t).loggedCost, 0);
+
+  const activeTimerTask = tasks.find(t => t.timerStart !== null);
+  const currentThemeLabel = THEMES.find(t => t.id === state.theme)?.label || "Obsidian Cyber";
+  const unreadNotifs = getUnreadNotifications();
+
+  // Clean Navigation Tabs
+  const TABS = [
+    ["board", "Board"],
+    ["team", "Team"],
+    ["calendar", "Calendar"],
+    ["meetings", "Meetings"],
+    ["flowmap", "🔗 Flow Map"],
+    ["dashboard", "Dashboard"],
+    ["reports", "Reports"]
+  ];
+  if (isAdmin) TABS.push(["confidential", "🔒 Confidential"]);
+
+  const doneTasksEst = tasks.filter(t => t.status === "Done").reduce((a, t) => a + t.estimateMins, 0);
+  const doneTasksLogged = tasks.filter(t => t.status === "Done").reduce((a, t) => a + liveLogged(t), 0);
+  const timeSavedMins = Math.max(0, doneTasksEst - doneTasksLogged) + (doneTasks * 45);
+
+  let html = `
+  ${activeTimerTask ? renderActiveTimerBar(activeTimerTask) : ""}
+
+  <header class="header">
+    <div class="brand">
+      <div class="brand-logo" title="Pulse Business Velocity Logo">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10" />
+          <line x1="12" y1="20" x2="12" y2="4" />
+          <line x1="6" y1="20" x2="6" y2="14" />
+          <path d="M3 16l6-6 4 4 7-7" />
+          <polyline points="16 7 20 7 20 11" />
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>Pulse Scrum & Workforce</h1>
+        <p>Tier 3 Enterprise Intelligence Edition</p>
+      </div>
+    </div>
+
+    <!-- Quick Search Command Trigger & Notification Bell Group -->
+    <div class="row" style="gap:8px">
+      <div class="quick-search-trigger" onclick="openCommandPalette()">
+        <span>🔍 Search or command…</span>
+        <span class="kbd-badge">Ctrl + K</span>
+      </div>
+
+      <!-- Notification Bell -->
+      <button class="notif-btn" onclick="setState({notifOpen:!state.notifOpen})" title="Notifications & Alerts">
+        🔔 ${unreadNotifs.length > 0 ? `<span class="notif-badge">${unreadNotifs.length}</span>` : ""}
+      </button>
+    </div>
+
+    <div class="header-actions">
+      <!-- 1-Button Theme Toggle -->
+      <button class="theme-btn" onclick="cycleTheme()" title="Click to cycle themes">
+        <span>${currentThemeLabel}</span>
+      </button>
+
+      <!-- Settings Button (ADMIN ONLY) -->
+      ${isAdmin ? `<button class="theme-btn" onclick="setState({settingsOpen:true})">⚙️ Settings</button>` : ""}
+
+      <div class="viewer-box">
+        <span class="mini" style="font-weight:600">Viewing as</span>
+        ${selectHtml("viewerSel", state.viewer, state.people.filter(p => p !== "Unassigned"), `setState({viewer:this.value})`)}
+        <span class="mini" style="color:var(--text-muted)">${state.roles[state.viewer] || '—'}</span>
+      </div>
+
+      <nav class="tabs">
+        ${TABS.map(([k, l]) => `<button class="tab ${state.view === k ? 'active' : ''}" onclick="setState({view:'${k}'})">${l}</button>`).join("")}
+      </nav>
+
+      <button class="tab" style="background:${state.guideOpen ? 'var(--bg-panel-elevated)' : 'transparent'};color:${state.guideOpen ? 'var(--blue)' : 'var(--text-muted)'}" onclick="setState({guideOpen:${!state.guideOpen}})">📖 Guide</button>
+    </div>
+  </header>
+
+  <div class="stats-bar">
+    ${statCard("Total Tickets", totalTasks, "var(--text-primary)")}
+    ${statCard("In Progress", wipTasks, "var(--blue)")}
+    ${statCard("Due / Pending", dueTasks, "var(--orange)")}
+    ${statCard("Completed", doneTasks, "var(--green)")}
+    ${statCard("Time Saved", fmtMins(timeSavedMins), "var(--green)")}
+    ${isAdmin ? statCard("Financial Burn ($)", `$${totalLoggedCost.toLocaleString()}`, "var(--purple)") : ""}
+    ${statCard("Logged Hours", fmtMins(totalLogged), "var(--blue)")}
+  </div>
+
+  ${state.view === "board" ? renderVelocityOrFlowBanner(isAdmin) : ""}
+
+  <div class="flex" style="flex:1">
+    <main class="main-content">${renderView(isAdmin)}</main>
+    ${state.guideOpen ? renderGuide() : ""}
+  </div>
+
+  <!-- Detail Modal -->
+  ${state.detailTaskId ? renderDetailModalWrapper(state.tasks.find(t => t.id === state.detailTaskId), isAdmin) : ""}
+
+  <!-- Rebalance Modal -->
+  ${state.rebalanceModalPerson ? renderRebalanceModal(state.rebalanceModalPerson) : ""}
+
+  <!-- Settings Modal (ADMIN ONLY) -->
+  ${state.settingsOpen && isAdmin ? renderSettingsModal() : ""}
+
+  <!-- Notifications Drawer -->
+  ${state.notifOpen ? renderNotificationsDrawer(unreadNotifs) : ""}
+
+  <!-- Command Palette Modal -->
+  ${state.cmdOpen ? renderCommandPalette(isAdmin) : ""}
+  `;
+
+  document.getElementById("app").innerHTML = html;
+}
+
+function renderActiveTimerBar(task) {
+  const elapsedSecs = Math.floor((Date.now() - task.timerStart) / 1000);
+  return `
+  <div class="active-timer-bar">
+    <div class="row">
+      <div class="active-timer-pulse"></div>
+      <b style="color:var(--green)">ACTIVE TIMER:</b>
+      <span style="font-weight:600">${esc(task.title)}</span>
+      <span class="pill" style="background:rgba(59,130,246,0.2);color:var(--blue)">${task.timerMode}</span>
+      <span class="mini">Owner: <b>${task.assignee}</b></span>
+    </div>
+    <div class="row">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--text-primary)">${fmtTimer(elapsedSecs)}</span>
+      <button class="btn btn-dark" style="padding:4px 10px;font-size:11px" onclick="setState({detailTaskId:'${task.id}'})">View</button>
+      <button class="btn btn-red" style="padding:4px 10px;font-size:11px" onclick="toggleTimer('${task.id}')">⏹ Stop & Log</button>
+    </div>
+  </div>`;
+}
+
+function renderVelocityOrFlowBanner(isAdmin) {
+  if (state.sprintMode === "continuous") {
+    const totalEst = state.tasks.reduce((a, t) => a + t.estimateMins, 0);
+    const doneMins = state.tasks.filter(t => t.status === "Done").reduce((a, t) => a + t.estimateMins, 0);
+    const completionPct = totalEst ? Math.round((doneMins / totalEst) * 100) : 0;
+
+    return `
+    <div class="sprint-velocity-bar" style="border-color:rgba(16,185,129,0.3);background:linear-gradient(90deg, rgba(16,185,129,0.06), rgba(59,130,246,0.06))">
+      <div class="row">
+        <span style="font-size:15px">♾️</span>
+        <div>
+          <b style="font-size:13px;color:var(--green)">Continuous Flow Mode Active (No Sprints)</b>
+          <div class="mini">Ongoing team delivery stream without fixed sprint deadlines</div>
+        </div>
+      </div>
+      <div class="row" style="flex:1;max-width:340px;margin:0 16px">
+        <div style="flex:1">
+          <div class="row-between mini" style="margin-bottom:3px">
+            <span>Overall Backlog Clearance</span>
+            <b>${completionPct}% Done</b>
+          </div>
+          <div class="mini-progress-track" style="height:6px"><div class="mini-progress-fill" style="width:${completionPct}%;background:var(--green)"></div></div>
+        </div>
+      </div>
+      <div class="row">
+        <span class="pill" style="background:rgba(16,185,129,0.2);color:var(--green)">Continuous Flow</span>
+      </div>
+    </div>`;
+  }
+
+  const sprintTasks = state.tasks.filter(t => t.sprint === state.filterSprint);
+  const totalEst = sprintTasks.reduce((a, t) => a + t.estimateMins, 0);
+  const doneMins = sprintTasks.filter(t => t.status === "Done").reduce((a, t) => a + t.estimateMins, 0);
+  const completionPct = totalEst ? Math.round((doneMins / totalEst) * 100) : 0;
+  const sprintLoggedCost = sprintTasks.reduce((a, t) => a + getTaskCost(t).loggedCost, 0);
+
+  // SVG Burndown Graph (Ideal vs Actual)
+  const svgGraph = `
+  <svg width="140" height="42" style="background:var(--bg-surface);border-radius:6px;padding:4px;border:1px solid var(--border)">
+    <!-- Ideal Line (Dashed Gray) -->
+    <line x1="10" y1="6" x2="130" y2="36" stroke="var(--text-muted)" stroke-width="1.5" stroke-dasharray="3,3" />
+    <!-- Actual Line (Solid Blue/Green) -->
+    <path d="M 10 6 L 40 12 L 70 20 L 100 28 L 130 ${36 - Math.round((completionPct/100)*30)}" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linejoin="round" />
+  </svg>`;
+
+  return `
+  <div class="sprint-velocity-bar">
+    <div class="row">
+      <span style="font-size:15px">🎯</span>
+      <div>
+        <b style="font-size:13px;color:var(--text-primary)">${state.filterSprint} Velocity ${isAdmin ? '& Cost' : ''}</b>
+        <div class="mini">${sprintTasks.length} tasks · ${fmtMins(doneMins)} of ${fmtMins(totalEst)} done ${isAdmin ? `· <b>$${sprintLoggedCost} logged cost</b>` : ''}</div>
+      </div>
+    </div>
+
+    <div class="row" style="gap:12px">
+      <div style="text-align:right" class="mini">
+        <div style="color:var(--text-muted)">Ideal vs Actual</div>
+        <b style="color:var(--blue)">${completionPct}% Done</b>
+      </div>
+      ${svgGraph}
+    </div>
+
+    <div class="row">
+      <span class="mini">Sprint Filter:</span>
+      ${selectHtml("sprintSelectFilter", state.filterSprint, ["All", ...state.sprints], `setState({filterSprint:this.value})`)}
+    </div>
+  </div>`;
+}
+
+function statCard(label, val, color) {
+  return `
+  <div class="stat-card">
+    <div class="stat-label">${label}</div>
+    <div class="stat-value" style="color:${color}">${val}</div>
+  </div>`;
+}
+
+function selectHtml(id, value, options, onchange) {
+  return `<select class="sel" id="${id}" onchange="${onchange}">${options.map(o => `<option value="${esc(o)}" ${o === value ? 'selected' : ''}>${esc(o)}</option>`).join("")}</select>`;
+}
+
+function renderView(isAdmin) {
+  if (state.view === "board") return renderBoard(isAdmin);
+  if (state.view === "team") return renderTeam(isAdmin);
+  if (state.view === "calendar") return renderCalendar();
+  if (state.view === "meetings") return renderMeetings();
+  if (state.view === "flowmap") return renderFlowMap();
+  if (state.view === "dashboard") return renderDashboard();
+  if (state.view === "reports") return renderReports(isAdmin);
+  if (state.view === "confidential" && isAdmin) return renderConfidential();
+  return "";
+}
+
+// --- Board View ---
+function renderBoard(isAdmin) {
+  const isContinuous = state.sprintMode === "continuous";
+  const tagOptions = ["All", ...state.tags.map(t => t.name)];
+
+  const filtered = state.tasks.filter(t => {
+    const matchesPerson = state.filterPerson === "All" || t.assignee === state.filterPerson;
+    const matchesCat = state.filterCat === "All" || t.category === state.filterCat;
+    const matchesSprint = isContinuous || state.filterSprint === "All" || t.sprint === state.filterSprint || (!t.sprint && state.filterSprint === state.sprints[0]);
+    const matchesSearch = !state.searchQuery || t.title.toLowerCase().includes(state.searchQuery.toLowerCase());
+    const matchesTag = state.filterTag === "All" || (t.tags || []).some(tid => {
+      const tg = state.tags.find(x => x.id === tid);
+      return tg && tg.name === state.filterTag;
+    });
+    return matchesPerson && matchesCat && matchesSprint && matchesSearch && matchesTag;
+  });
+  const d = state.draft;
+
+  return `
+  <div>
+    <div class="row-between" style="margin-bottom:16px;flex-wrap:wrap">
+      <div class="row" style="flex-wrap:wrap">
+        <input class="txt" style="width:190px" placeholder="Filter tickets…" value="${esc(state.searchQuery)}" oninput="state.searchQuery=this.value;render()">
+        ${selectHtml("catf", state.filterCat, ["All", ...state.categories], `setState({filterCat:this.value})`)}
+        ${selectHtml("perf", state.filterPerson, ["All", ...state.people], `setState({filterPerson:this.value})`)}
+        ${selectHtml("tagf", state.filterTag, tagOptions, `setState({filterTag:this.value})`)}
+
+        <!-- Mode Toggle -->
+        <div class="tabs" style="margin-left:4px">
+          <button class="tab ${state.boardMode === 'kanban' ? 'active' : ''}" onclick="setState({boardMode:'kanban'})">📋 Kanban</button>
+          <button class="tab ${state.boardMode === 'table' ? 'active' : ''}" onclick="setState({boardMode:'table'})">📊 Table View</button>
+        </div>
+      </div>
+      <button class="btn btn-blue" onclick="setState({newTaskOpen:${!state.newTaskOpen}})">+ New Ticket</button>
+    </div>
+
+    ${state.newTaskOpen ? `
+    <div class="card" style="margin-bottom:18px;border-color:var(--blue);background:rgba(59,130,246,0.04)">
+      <div style="font-weight:700;font-size:13.5px;margin-bottom:10px">Create New Ticket</div>
+      <div class="row" style="flex-wrap:wrap;margin-bottom:8px">
+        <input class="txt" style="flex:2 1 240px" placeholder="Ticket Title *" value="${esc(d.title)}" oninput="state.draft.title=this.value">
+        ${selectHtml("dcat", d.category, state.categories, `state.draft.category=this.value`)}
+        ${selectHtml("dpri", d.priority, PRIORITIES, `state.draft.priority=this.value`)}
+        ${!isContinuous ? selectHtml("dspr", d.sprint, state.sprints, `state.draft.sprint=this.value`) : ""}
+        <span class="labeled">Owner ${selectHtml("down", d.assignee, state.people, `state.draft.assignee=this.value`)}</span>
+        <span class="labeled">Contributor ${selectHtml("dcon", d.contributor2, state.people, `state.draft.contributor2=this.value`)}</span>
+        <span class="labeled">Reviewer ${selectHtml("drev", d.reviewer, state.people, `state.draft.reviewer=this.value`)}</span>
+      </div>
+      <div class="row" style="flex-wrap:wrap;margin-bottom:10px;gap:6px">
+        <span class="mini" style="font-weight:700">Tags:</span>
+        ${state.tags.map(tg => {
+          const isSelected = (d.tags || []).includes(tg.id);
+          return `
+          <span class="tag-badge" style="cursor:pointer;background:${isSelected ? tg.color : 'transparent'};color:${isSelected ? '#fff' : tg.color};border:1px solid ${tg.color}" onclick="if(state.draft.tags.includes('${tg.id}')){state.draft.tags=state.draft.tags.filter(x=>x!=='${tg.id}')}else{state.draft.tags.push('${tg.id}')};render()">
+            🏷️ ${esc(tg.name)}
+          </span>`;
+        }).join("")}
+      </div>
+      <textarea class="txt" style="min-height:50px;margin-bottom:10px" placeholder="Task description & execution requirements…" oninput="state.draft.description=this.value">${esc(d.description)}</textarea>
+      <div class="row-between">
+        <label class="labeled" style="cursor:pointer"><input type="checkbox" ${d.requiresApproval ? 'checked' : ''} onchange="state.draft.requiresApproval=this.checked"> Requires multi-stage approval</label>
+        <div class="row">
+          <button class="btn btn-dark" onclick="setState({newTaskOpen:false})">Cancel</button>
+          <button class="btn btn-green" onclick="addTask()">Create Ticket</button>
+        </div>
+      </div>
+    </div>` : ""}
+
+    ${state.boardMode === 'kanban' ? renderKanbanGrid(filtered, isAdmin) : renderTableView(filtered, isAdmin)}
+  </div>`;
+}
+
+function renderKanbanGrid(filtered, isAdmin) {
+  return `
+  <div class="board-grid-wrapper">
+    <div class="board-grid">
+      ${state.statuses.map(status => {
+        const colTasks = filtered.filter(t => t.status === status);
+        const isDoneCol = status === "Done";
+        const wipLimit = state.wipLimits[status] || 999;
+        const isOverLimit = colTasks.length > wipLimit;
+
+        return `
+        <div class="column ${isOverLimit ? 'wip-over' : ''}" id="col-${status}" ondragover="onDragOver(event, '${status}')" ondragleave="onDragLeave(event, '${status}')" ondrop="onDrop(event, '${status}')">
+          <div class="column-header">
+            <div class="col-title" style="color:${STATUS_COLOR[status] || 'var(--text-primary)'}">
+              <span class="col-dot" style="background:${STATUS_COLOR[status] || 'var(--blue)'}"></span>
+              <span>${status}</span>
+            </div>
+            <div class="row" style="gap:4px">
+              <span class="col-badge">
+                ${colTasks.length} ${wipLimit < 100 ? `/ ${wipLimit}` : ''}
+              </span>
+              ${isOverLimit ? `<span title="WIP Capacity Limit Exceeded (${colTasks.length}/${wipLimit})" style="font-size:12px">⚠️</span>` : ''}
+            </div>
+          </div>
+          <div class="cards-container">
+            ${colTasks.map(t => taskCardHtml(t, isAdmin)).join("")}
+          </div>
+        </div>`;
+      }).join("")}
+    </div>
+  </div>`;
+}
+
+function renderTableView(filtered, isAdmin) {
+  const isContinuous = state.sprintMode === "continuous";
+  const allSelected = filtered.length > 0 && state.selectedTaskIds.length === filtered.length;
+
+  return `
+  <div class="table-view-container">
+    <table class="pulse-table">
+      <thead>
+        <tr>
+          <th style="width:36px;text-align:center"><input type="checkbox" ${allSelected ? 'checked' : ''} onchange="toggleAllTaskSelection(${JSON.stringify(filtered).replace(/"/g, '&quot;')})"></th>
+          <th>Priority</th>
+          <th>Ticket Title</th>
+          <th>Status</th>
+          <th>Tags</th>
+          ${!isContinuous ? `<th>Sprint</th>` : ""}
+          <th>Owner</th>
+          <th>Category</th>
+          ${isAdmin ? `<th>Cost Est / Logged</th>` : ""}
+          <th>Blockers</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filtered.map(t => {
+          const isSelected = state.selectedTaskIds.includes(t.id);
+          const c = getTaskCost(t);
+          const hasBlockerWarning = (t.blockers || []).some(bid => {
+            const bt = state.tasks.find(x => x.id === bid);
+            return bt && bt.status !== "Done";
+          });
+          const taskTags = (t.tags || []).map(tid => state.tags.find(tg => tg.id === tid)).filter(Boolean);
+
+          return `
+          <tr style="${isSelected ? 'background:rgba(59,130,246,0.08)' : ''}">
+            <td style="text-align:center"><input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleTaskSelection('${t.id}')"></td>
+            <td><span class="pill" style="color:${PRIORITY_COLOR[t.priority]};background:${PRIORITY_COLOR[t.priority]}22">${t.priority}</span></td>
+            <td>
+              <b style="cursor:pointer;color:var(--text-primary)" onclick="setState({detailTaskId:'${t.id}'})">${esc(t.title)}</b>
+              ${hasBlockerWarning ? `<span class="pill" style="background:rgba(239,68,68,0.2);color:var(--red);margin-left:6px">🚫 Blocked</span>` : ""}
+            </td>
+            <td>${selectHtml("tbl-st-" + t.id, t.status, state.statuses, `updateTask('${t.id}',{status:this.value},'Status → '+this.value)`)}</td>
+            <td>
+              <div class="row" style="gap:4px;flex-wrap:wrap">
+                ${taskTags.map(tg => `<span class="tag-badge" style="background:${tg.color}22;color:${tg.color}">${esc(tg.name)}</span>`).join("")}
+                ${taskTags.length === 0 ? '<span class="mini">—</span>' : ''}
+              </div>
+            </td>
+            ${!isContinuous ? `<td>${selectHtml("tbl-spr-" + t.id, t.sprint || state.sprints[0], state.sprints, `updateTask('${t.id}',{sprint:this.value})`)}</td>` : ""}
+            <td>${selectHtml("tbl-own-" + t.id, t.assignee, state.people, `updateTask('${t.id}',{assignee:this.value},'Owner → '+this.value)`)}</td>
+            <td><span class="mini" style="font-weight:600">${t.category}</span></td>
+            ${isAdmin ? `<td style="font-size:11.5px;color:var(--text-muted)"><b>$${c.estCost}</b> / <span style="color:var(--purple)">$${c.loggedCost}</span></td>` : ""}
+            <td><span class="mini">${(t.blockers || []).length} blocker(s)</span></td>
+            <td>
+              <div class="row">
+                <button class="btn btn-dark" style="padding:4px 8px;font-size:11px" onclick="setState({detailTaskId:'${t.id}'})">Inspect</button>
+                <button class="btn-icon" onclick="deleteTask('${t.id}')">🗑</button>
+              </div>
+            </td>
+          </tr>`;
+        }).join("")}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Floating Bulk Operations Toolbar -->
+  ${state.selectedTaskIds.length > 0 ? `
+  <div class="bulk-bar">
+    <div class="row">
+      <b style="color:var(--blue);font-size:13px">☑️ ${state.selectedTaskIds.length} Selected</b>
+    </div>
+    <div class="row">
+      <span class="mini">Move Status:</span>
+      <select class="sel" style="padding:4px 8px;font-size:11.5px" onchange="if(this.value){bulkMoveStatus(this.value);this.value=''}">
+        <option value="">Select Status…</option>
+        ${state.statuses.map(st => `<option value="${st}">${st}</option>`).join("")}
+      </select>
+    </div>
+    <div class="row">
+      <span class="mini">Reassign:</span>
+      <select class="sel" style="padding:4px 8px;font-size:11.5px" onchange="if(this.value){bulkReassign(this.value);this.value=''}">
+        <option value="">Select Owner…</option>
+        ${state.people.map(p => `<option value="${p}">${p}</option>`).join("")}
+      </select>
+    </div>
+    <div class="row">
+      <button class="btn btn-red" style="padding:5px 10px;font-size:11px" onclick="bulkDelete()">🗑 Bulk Delete</button>
+      <button class="btn btn-dark" style="padding:5px 10px;font-size:11px" onclick="setState({selectedTaskIds:[]})">Deselect All</button>
+    </div>
+  </div>` : ""}`;
+}
+
+function taskCardHtml(t, isAdmin) {
+  const logged = liveLogged(t);
+  const over = logged > t.estimateMins;
+  const subtasks = t.subtasks || [];
+  const completedSubtasks = subtasks.filter(s => s.done).length;
+  const subtaskPct = subtasks.length ? Math.round((completedSubtasks / subtasks.length) * 100) : 0;
+  const c = getTaskCost(t);
+
+  const uncompletedBlockers = (t.blockers || []).filter(bid => {
+    const bt = state.tasks.find(x => x.id === bid);
+    return bt && bt.status !== "Done";
+  });
+
+  const taskTags = (t.tags || []).map(tid => state.tags.find(tg => tg.id === tid)).filter(Boolean);
+
+  return `
+  <div class="taskcard" id="card-${t.id}" draggable="true" ondragstart="onDragStart(event, '${t.id}')" ondragend="onDragEnd(event, '${t.id}')" onclick="setState({detailTaskId:'${t.id}'})">
+    <div class="card-top">
+      <div class="card-title">${esc(t.title)}</div>
+    </div>
+
+    ${taskTags.length > 0 ? `
+    <div class="row" style="gap:4px;flex-wrap:wrap;margin-top:6px">
+      ${taskTags.map(tg => `<span class="tag-badge" style="background:${tg.color}22;color:${tg.color}">${esc(tg.name)}</span>`).join("")}
+    </div>` : ""}
+
+    <div class="pills-row">
+      <span class="pill" style="color:${PRIORITY_COLOR[t.priority]};background:${PRIORITY_COLOR[t.priority]}22">${t.priority}</span>
+      <span class="mini" style="font-weight:600">${t.category}</span>
+      ${uncompletedBlockers.length > 0 ? `<span class="pill" style="background:rgba(239,68,68,0.2);color:var(--red)">🚫 Blocked</span>` : ""}
+      ${t.requiresApproval ? `<span class="pill" style="color:${APPROVAL_COLOR[t.approvalStatus]};background:${APPROVAL_COLOR[t.approvalStatus]}22">${t.approvalStatus}</span>` : ""}
+    </div>
+
+    ${subtasks.length > 0 ? `
+    <div class="subtasks-bar-box">
+      <div class="row-between">
+        <span>Subtasks: ${completedSubtasks}/${subtasks.length}</span>
+        <span>${subtaskPct}%</span>
+      </div>
+      <div class="mini-progress-track">
+        <div class="mini-progress-fill" style="width:${subtaskPct}%"></div>
+      </div>
+    </div>` : ""}
+
+    <div class="card-meta">
+      <div class="avatar-chip">
+        <span style="font-size:9px;color:var(--text-muted)">👤</span>
+        <span>${t.assignee}</span>
+      </div>
+      <div class="row mini" style="color:${over ? 'var(--red)' : 'var(--text-muted)'}">
+        <span>⏱ ${fmtMins(logged)} ${isAdmin ? `($${c.loggedCost})` : ''}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+// --- Interactive Ticket Dependency Flow Map ---
+function renderFlowMap() {
+  const tasksWithBlockers = state.tasks.filter(t => (t.blockers || []).length > 0);
+
+  return `
+  <div>
+    <div class="row-between" style="margin-bottom:16px">
+      <div>
+        <b style="font-size:15px">🔗 Interactive Dependency Flow Map</b>
+        <div class="mini">Visual prerequisite trees showing blocker prerequisites and dependent downstream tickets</div>
+      </div>
+      <span class="pill" style="background:rgba(59,130,246,0.15);color:var(--blue)">${tasksWithBlockers.length} Blocked Chain(s)</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      ${tasksWithBlockers.map(t => {
+        return `
+        <div class="card" style="border-left:4px solid var(--orange)">
+          <div class="row-between" style="margin-bottom:10px">
+            <div class="row">
+              <span class="pill" style="background:rgba(239,68,68,0.15);color:var(--red)">Target Ticket</span>
+              <b style="font-size:13.5px;cursor:pointer" onclick="setState({detailTaskId:'${t.id}'})">${esc(t.title)}</b>
+              <span class="mini">(${t.assignee} · ${t.status})</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--bg-surface);padding:12px;border-radius:10px;border:1px solid var(--border)">
+            <b style="font-size:11.5px;color:var(--text-muted)">Prerequisites (Blocked By):</b>
+            ${(t.blockers || []).map(bid => {
+              const bt = state.tasks.find(x => x.id === bid);
+              if (!bt) return '';
+              const isResolved = bt.status === 'Done';
+              return `
+              <div class="row" style="background:var(--bg-panel-elevated);padding:6px 10px;border-radius:7px;border:1px solid ${isResolved ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}">
+                <span class="col-dot" style="background:${isResolved ? 'var(--green)' : 'var(--red)'}"></span>
+                <span style="font-size:12px;font-weight:600">${esc(bt.title)}</span>
+                <span class="mini" style="color:${isResolved ? 'var(--green)' : 'var(--red)'}">[${bt.status}]</span>
+              </div>
+              <span style="color:var(--text-muted)">➔</span>`;
+            }).join("")}
+            <div class="row" style="background:rgba(59,130,246,0.15);padding:6px 10px;border-radius:7px;border:1px solid var(--blue)">
+              <span style="font-size:12px;font-weight:700;color:var(--blue)">${esc(t.title)}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join("")}
+      ${tasksWithBlockers.length === 0 ? `<div class="card" style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px">No active prerequisite blocker links found across workspace tickets. Board is clean!</div>` : ""}
+    </div>
+  </div>`;
+}
+
+// --- Ticket Detail Modal ---
+function renderDetailModalWrapper(t, isAdmin) {
+  if (!t) return "";
+  return `
+  <div class="modal-backdrop" onclick="setState({detailTaskId:null})">
+    <div class="modal-window" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="row">
+          <span class="pill" style="color:${PRIORITY_COLOR[t.priority]};background:${PRIORITY_COLOR[t.priority]}22">${t.priority}</span>
+          <span class="pill" style="color:${STATUS_COLOR[t.status] || 'var(--text-primary)'};background:rgba(59,130,246,0.15)">${t.status}</span>
+          <span class="mini" style="font-weight:700">${t.category}</span>
+        </div>
+        <div class="row">
+          <button class="btn btn-dark" style="padding:5px 10px;font-size:11px" onclick="openMeetingFor('${t.id}')">📅 Schedule Meeting</button>
+          <button class="btn btn-red" style="padding:5px 10px;font-size:11px" onclick="deleteTask('${t.id}')">🗑 Delete</button>
+          <button class="btn-icon" style="font-size:16px" onclick="setState({detailTaskId:null})">✕</button>
+        </div>
+      </div>
+
+      <div class="modal-body" id="modalBodyContent">
+        ${renderDetailModalBody(t, isAdmin)}
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-dark" onclick="setState({detailTaskId:null})">Close</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderDetailModalBody(t, isAdmin) {
+  if (isAdmin === undefined) isAdmin = CONFIDENTIAL_ROLES.includes(state.viewer);
+  const logged = liveLogged(t);
+  const subtasks = t.subtasks || [];
+  const completedCount = subtasks.filter(s => s.done).length;
+  const progressPct = subtasks.length ? Math.round((completedCount / subtasks.length) * 100) : 0;
+  const startMode = state.startModes[t.id] || "Online";
+  const c = getTaskCost(t);
+  const isContinuous = state.sprintMode === "continuous";
+
+  const otherTasks = state.tasks.filter(x => x.id !== t.id);
+
+  return `
+  <!-- Title & Description -->
+  <div>
+    <input class="txt" style="font-size:16px;font-weight:700;width:100%;margin-bottom:8px" value="${esc(t.title)}" onchange="updateTask('${t.id}',{title:this.value},'Renamed ticket')">
+    <textarea class="txt" style="min-height:70px;font-size:12.5px" placeholder="Add detailed requirements, markdown links, or specifications…" onblur="updateTask('${t.id}',{description:this.value},null,true)">${esc(t.description || "")}</textarea>
+  </div>
+
+  <!-- Tag Selector Badges -->
+  <div class="card">
+    <b style="font-size:12.5px;margin-bottom:8px;display:block">🏷️ Custom Ticket Tags & Labels</b>
+    <div class="row" style="flex-wrap:wrap;gap:6px">
+      ${state.tags.map(tg => {
+        const isSelected = (t.tags || []).includes(tg.id);
+        return `
+        <span class="tag-badge" style="cursor:pointer;font-size:11px;padding:3px 9px;background:${isSelected ? tg.color : 'transparent'};color:${isSelected ? '#fff' : tg.color};border:1px solid ${tg.color}" onclick="toggleTicketTag('${t.id}','${tg.id}')">
+          🏷️ ${esc(tg.name)} ${isSelected ? '✓' : ''}
+        </span>`;
+      }).join("")}
+    </div>
+  </div>
+
+  <!-- Stakeholder & Sprint Grid -->
+  <div class="card" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
+    <div>
+      <div class="mini" style="margin-bottom:3px">Status</div>
+      ${selectHtml("mod-st-" + t.id, t.status, state.statuses, `updateTask('${t.id}',{status:this.value},'Status → '+this.value, true)`)}
+    </div>
+    ${!isContinuous ? `
+    <div>
+      <div class="mini" style="margin-bottom:3px">Sprint Cycle</div>
+      ${selectHtml("mod-spr-" + t.id, t.sprint || state.sprints[0], state.sprints, `updateTask('${t.id}',{sprint:this.value},'Sprint → '+this.value, true)`)}
+    </div>` : `
+    <div>
+      <div class="mini" style="margin-bottom:3px">Workflow Stream</div>
+      <span class="pill" style="background:rgba(16,185,129,0.15);color:var(--green);padding:6px 10px;display:inline-block">♾️ Continuous Flow</span>
+    </div>`}
+    <div>
+      <div class="mini" style="margin-bottom:3px">Owner</div>
+      ${selectHtml("mod-own-" + t.id, t.assignee, state.people, `updateTask('${t.id}',{assignee:this.value},'Owner → '+this.value, true)`)}
+    </div>
+    <div>
+      <div class="mini" style="margin-bottom:3px">Contributor</div>
+      ${selectHtml("mod-con-" + t.id, t.contributor2, state.people, `updateTask('${t.id}',{contributor2:this.value},null,true)`)}
+    </div>
+    <div>
+      <div class="mini" style="margin-bottom:3px">Due Date</div>
+      <input type="date" class="txt" style="padding:4px 8px;font-size:11.5px" value="${t.dueDate || ''}" onchange="updateTask('${t.id}',{dueDate:this.value||null},'Due date updated', true)">
+    </div>
+  </div>
+
+  <!-- Financial & Cost Tracker (ADMIN ONLY) -->
+  ${isAdmin ? `
+  <div class="card" style="display:flex;justify-content:space-between;align-items:center;background:rgba(168,85,247,0.06);border-color:rgba(168,85,247,0.2)">
+    <div>
+      <b style="font-size:13px;color:var(--purple)">🔒 Financial Cost Tracking (Admin Only)</b>
+      <div class="mini">Role Rate: $${c.rate}/hr (${state.roles[t.assignee] || 'Employee'})</div>
+    </div>
+    <div class="row" style="gap:16px">
+      <div>
+        <div class="mini">Est. Cost</div>
+        <b style="font-size:14px">$${c.estCost}</b>
+      </div>
+      <div>
+        <div class="mini">Logged Burn</div>
+        <b style="font-size:14px;color:var(--purple)">$${c.loggedCost}</b>
+      </div>
+    </div>
+  </div>` : ""}
+
+  <!-- Task Dependencies ("Blocked By") -->
+  <div class="card">
+    <b style="font-size:13px;margin-bottom:8px;display:block">🚫 Prerequisite Dependencies ("Blocked By")</b>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+      ${(t.blockers || []).map(bid => {
+        const bt = state.tasks.find(x => x.id === bid);
+        if (!bt) return "";
+        const isResolved = bt.status === "Done";
+        return `
+        <div class="row-between" style="background:var(--bg-surface);padding:6px 10px;border-radius:7px;border:1px solid var(--border)">
+          <span class="row">
+            <span class="pill" style="color:${isResolved ? 'var(--green)' : 'var(--red)'};background:${isResolved ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)'}">${bt.status}</span>
+            <span style="font-size:12px;font-weight:600">${esc(bt.title)}</span>
+          </span>
+          <button class="btn-icon" onclick="toggleBlocker('${t.id}','${bid}')">✕ Remove</button>
+        </div>`;
+      }).join("")}
+      ${(!t.blockers || t.blockers.length === 0) ? `<div class="mini">No dependencies set.</div>` : ""}
+    </div>
+    <div class="row">
+      <span class="mini">Add Blocker:</span>
+      <select class="sel" style="flex:1;font-size:11.5px" onchange="if(this.value){toggleBlocker('${t.id}',this.value);this.value=''}">
+        <option value="">Select prerequisite ticket…</option>
+        ${otherTasks.map(ot => `<option value="${ot.id}">${esc(ot.title)} (${ot.status})</option>`).join("")}
+      </select>
+    </div>
+  </div>
+
+  <!-- Time Tracker Section -->
+  <div class="card">
+    <div class="row-between" style="margin-bottom:8px">
+      <b style="font-size:13px">⏱ Time Tracking & Man-Hours</b>
+      <span class="mini" style="font-weight:700">${fmtMins(logged)} / ${fmtMins(t.estimateMins)} (${Math.round((logged / (t.estimateMins || 1)) * 100)}%)</span>
+    </div>
+    <div class="row" style="flex-wrap:wrap;gap:8px">
+      ${!t.timerStart ? `
+        <select class="sel" style="font-size:11px" onchange="state.startModes['${t.id}']=this.value">${WORK_MODES.map(m => `<option ${m === startMode ? 'selected' : ''}>${m}</option>`).join("")}</select>
+        <button class="btn btn-green" onclick="toggleTimer('${t.id}')">▶ Start Stopwatch</button>
+      ` : `
+        <button class="btn btn-red" onclick="toggleTimer('${t.id}')">⏸ Pause Stopwatch</button>
+      `}
+      <span class="mini" style="color:var(--text-muted);margin:0 4px">or log manually:</span>
+      <button class="btn btn-dark" style="padding:4px 8px;font-size:11px" onclick="addManualTime('${t.id}', 15)">+15m</button>
+      <button class="btn btn-dark" style="padding:4px 8px;font-size:11px" onclick="addManualTime('${t.id}', 30)">+30m</button>
+      <button class="btn btn-dark" style="padding:4px 8px;font-size:11px" onclick="addManualTime('${t.id}', 60)">+1h</button>
+    </div>
+  </div>
+
+  <!-- Subtasks & Checklist -->
+  <div class="card">
+    <div class="row-between" style="margin-bottom:8px">
+      <b style="font-size:13px">✅ Subtasks & Checklist (${completedCount}/${subtasks.length})</b>
+      <span class="mini">${progressPct}% Complete</span>
+    </div>
+    <div class="bar-outer" style="margin-bottom:12px"><div class="bar-inner" style="width:${progressPct}%;background:var(--green)"></div></div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+      ${subtasks.map(s => `
+        <div class="checklist-item ${s.done ? 'done' : ''}">
+          <input type="checkbox" ${s.done ? 'checked' : ''} onchange="toggleSubtask('${t.id}','${s.id}')">
+          <span style="flex:1">${esc(s.text)}</span>
+        </div>
+      `).join("")}
+    </div>
+    <div class="row">
+      <input class="txt" id="new-subtask-${t.id}" style="flex:1;padding:6px 10px;font-size:12px" placeholder="Add a subtask…" onkeydown="if(event.key==='Enter'){addSubtask('${t.id}',this.value);this.value=''}">
+      <button class="btn btn-dark" onclick="const el=document.getElementById('new-subtask-${t.id}');addSubtask('${t.id}',el.value);el.value=''">Add</button>
+    </div>
+  </div>
+
+  <!-- Comments & Activity Trail -->
+  <div class="card">
+    <b style="font-size:13px;margin-bottom:8px;display:block">💬 Comments & Audit Trail</b>
+    <div style="display:flex;flex-direction:column;gap:8px;max-height:160px;overflow-y:auto;margin-bottom:10px;padding-right:4px">
+      ${(t.comments || []).map(c => `
+        <div style="background:var(--bg-surface);padding:8px 12px;border-radius:8px;font-size:12px">
+          <div class="row-between" style="margin-bottom:2px">
+            <b style="color:var(--text-primary)">${esc(c.author)}</b>
+            <span class="mini" style="font-size:10px">${new Date(c.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
+          <div style="color:var(--text-secondary)">${esc(c.text)}</div>
+        </div>
+      `).join("")}
+      ${(!t.comments || t.comments.length === 0) ? `<div class="mini">No comments yet.</div>` : ""}
+    </div>
+    <div class="row">
+      <input class="txt" id="detail-comment-input" style="flex:1;padding:6px 10px;font-size:12px" placeholder="Comment as ${state.viewer}…" onkeydown="if(event.key==='Enter'){addComment('${t.id}',this.value);this.value=''}">
+      <button class="btn btn-blue" onclick="const el=document.getElementById('detail-comment-input');addComment('${t.id}',el.value);el.value=''">Post</button>
+    </div>
+    ${t.activity?.length ? `
+      <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:8px">
+        <div class="mini" style="font-weight:700;margin-bottom:4px;color:var(--text-muted)">Recent Activity:</div>
+        ${t.activity.slice().reverse().slice(0, 4).map(a => `<div class="mini" style="margin-bottom:2px;color:var(--text-muted)">• ${esc(a.text)} <span style="font-size:9.5px">(${new Date(a.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})</span></div>`).join("")}
+      </div>
+    ` : ""}
+  </div>`;
+}
+
+// --- System Customization Settings Modal (ADMIN ONLY) ---
+function renderSettingsModal() {
+  const isContinuous = state.sprintMode === "continuous";
+  return `
+  <div class="modal-backdrop" onclick="setState({settingsOpen:false})">
+    <div class="modal-window" style="max-width:680px" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="row">
+          <span style="font-size:16px">⚙️</span>
+          <b style="font-size:14px">System Customization Settings (Administrator Portal)</b>
+        </div>
+        <button class="btn-icon" onclick="setState({settingsOpen:false})">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Workflow Methodology Mode (Scrum vs Continuous Flow) -->
+        <div class="card" style="background:rgba(59,130,246,0.06);border-color:rgba(59,130,246,0.2)">
+          <div class="row-between" style="margin-bottom:6px">
+            <b style="font-size:13px;color:var(--blue)">🔄 Workflow Methodology Mode</b>
+            <span class="pill" style="background:var(--bg-panel-elevated);color:var(--text-primary)">Admin Setting</span>
+          </div>
+          <div class="mini" style="margin-bottom:10px">Choose how your team manages tasks: time-boxed Scrum sprints vs continuous flow (Kanban stream without sprint deadlines).</div>
+          <div class="row" style="gap:12px">
+            <label class="labeled" style="background:var(--bg-surface);padding:8px 12px;border-radius:8px;border:1px solid var(--border);cursor:pointer;flex:1">
+              <input type="radio" name="sprintModeRadio" value="scrum" ${!isContinuous ? 'checked' : ''} onchange="setState({sprintMode:'scrum',filterSprint:'Sprint 14 (Current)'});showToast('Switched to Scrum Sprint Mode!','🎯')">
+              <div>
+                <b>🎯 Time-Boxed Sprints (Scrum)</b>
+                <div class="mini">Sprint 14, Sprint 15, Velocity burndowns</div>
+              </div>
+            </label>
+            <label class="labeled" style="background:var(--bg-surface);padding:8px 12px;border-radius:8px;border:1px solid var(--border);cursor:pointer;flex:1">
+              <input type="radio" name="sprintModeRadio" value="continuous" ${isContinuous ? 'checked' : ''} onchange="setState({sprintMode:'continuous',filterSprint:'All'});showToast('Switched to Continuous Flow Mode!','♾️')">
+              <div>
+                <b>♾️ Continuous Flow (No Sprints)</b>
+                <div class="mini">Work flows continuously without sprint timeboxes</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- WIP Capacity Limits Manager -->
+        <div class="card">
+          <b style="font-size:13px;margin-bottom:6px;display:block">⚠️ Column WIP Capacity Limits</b>
+          <div class="mini" style="margin-bottom:10px">Set max ticket threshold limits per column to prevent team overload.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            ${state.statuses.map(status => `
+              <div class="row-between" style="background:var(--bg-surface);padding:6px 10px;border-radius:6px;border:1px solid var(--border)">
+                <span class="mini" style="font-weight:700">${status}</span>
+                <input class="txt" type="number" min="1" style="width:60px;padding:3px 6px;font-size:11.5px" value="${state.wipLimits[status] || 999}" onchange="state.wipLimits['${status}']=Number(this.value)||999;render();persist()">
+              </div>
+            `).join("")}
+          </div>
+        </div>
+
+        <!-- Tag & Label Manager -->
+        <div class="card">
+          <b style="font-size:13px;margin-bottom:6px;display:block">🏷️ Custom Tags & Labels Manager</b>
+          <div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:10px">
+            ${state.tags.map(tg => `
+              <span class="tag-badge" style="background:${tg.color}22;color:${tg.color};padding:5px 9px;font-size:11px;display:inline-flex;align-items:center;gap:6px">
+                <b>${esc(tg.name)}</b>
+                <span style="cursor:pointer;color:var(--red);font-weight:bold" onclick="removeCustomTag('${tg.id}')">✕</span>
+              </span>
+            `).join("")}
+          </div>
+          <div class="row" style="flex-wrap:wrap">
+            <input class="txt" id="newTagNameInput" style="flex:1;padding:6px 10px;font-size:12px" placeholder="Tag Name (e.g. Design System, Security)…">
+            <input type="color" id="newTagColorInput" value="#3B82F6" style="width:36px;height:32px;border:none;border-radius:6px;cursor:pointer">
+            <button class="btn btn-green" onclick="const name=document.getElementById('newTagNameInput').value;const color=document.getElementById('newTagColorInput').value;addCustomTag(name,color);document.getElementById('newTagNameInput').value=''">+ Add Tag</button>
+          </div>
+        </div>
+
+        <!-- Team Member & Role Manager -->
+        <div class="card">
+          <b style="font-size:13px;margin-bottom:6px;display:block">👤 Team Member & Role Manager</b>
+          <div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:10px">
+            ${state.people.filter(p => p !== "Unassigned").map((p) => `
+              <span class="pill" style="background:var(--bg-surface);border:1px solid var(--border);padding:5px 9px;display:inline-flex;align-items:center;gap:6px">
+                <b>${p}</b> <span class="mini" style="color:var(--text-muted)">(${state.roles[p] || 'Employee'})</span>
+                <span style="cursor:pointer;color:var(--red);font-weight:bold" onclick="removeMember('${p}')">✕</span>
+              </span>
+            `).join("")}
+          </div>
+          <div class="row" style="flex-wrap:wrap">
+            <input class="txt" id="newMemberCodeInput" style="width:110px;padding:6px 10px;font-size:12px" placeholder="Initials (e.g. SK)">
+            <select class="sel" id="newMemberRoleSelect" style="font-size:12px;flex:1">
+              ${ROLE_OPTIONS.map(r => `<option value="${r}">${r}</option>`).join("")}
+            </select>
+            <button class="btn btn-green" onclick="const code=document.getElementById('newMemberCodeInput').value;const role=document.getElementById('newMemberRoleSelect').value;addMember(code,role);document.getElementById('newMemberCodeInput').value=''">+ Add Member</button>
+          </div>
+        </div>
+
+        <!-- Sprint Cycles Manager (Only shown if Scrum mode active) -->
+        ${!isContinuous ? `
+        <div class="card">
+          <b style="font-size:13px;margin-bottom:6px;display:block">🎯 Active Sprint Cycles Manager</b>
+          <div class="row" style="flex-wrap:wrap;margin-bottom:8px">
+            ${state.sprints.map((spr, i) => `
+              <span class="pill" style="background:var(--bg-surface);border:1px solid var(--border);padding:4px 8px">
+                ${spr} ${state.sprints.length > 1 ? `<span style="cursor:pointer;margin-left:4px;color:var(--red)" onclick="state.sprints.splice(${i},1);render();persist()">✕</span>` : ""}
+              </span>
+            `).join("")}
+          </div>
+          <div class="row">
+            <input class="txt" id="newSprintInput" style="flex:1;padding:6px 10px;font-size:12px" placeholder="Add custom sprint (e.g. Sprint 16, Sprint 17 Q3)…">
+            <button class="btn btn-dark" onclick="const el=document.getElementById('newSprintInput');if(el.value.trim()){state.sprints.push(el.value.trim());el.value='';render();persist();showToast('Added new sprint cycle!','🎯')}">Add Sprint</button>
+          </div>
+        </div>` : ""}
+
+        <!-- Status Columns Manager -->
+        <div class="card">
+          <b style="font-size:13px;margin-bottom:6px;display:block">📋 Kanban Status Columns</b>
+          <div class="row" style="flex-wrap:wrap;margin-bottom:8px">
+            ${state.statuses.map((st, i) => `
+              <span class="pill" style="background:var(--bg-surface);border:1px solid var(--border);padding:4px 8px">
+                ${st} ${state.statuses.length > 2 ? `<span style="cursor:pointer;margin-left:4px;color:var(--red)" onclick="state.statuses.splice(${i},1);render();persist()">✕</span>` : ""}
+              </span>
+            `).join("")}
+          </div>
+          <div class="row">
+            <input class="txt" id="newStatusInput" style="flex:1;padding:6px 10px;font-size:12px" placeholder="Add custom column (e.g. In Review, QA)…">
+            <button class="btn btn-dark" onclick="const el=document.getElementById('newStatusInput');if(el.value.trim()){state.statuses.push(el.value.trim());el.value='';render();persist();showToast('Added custom column!','✨')}">Add Column</button>
+          </div>
+        </div>
+
+        <!-- Role Hourly Rates Manager -->
+        <div class="card">
+          <b style="font-size:13px;margin-bottom:8px;display:block">💰 Hourly Billable Rates ($/hr)</b>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            ${Object.keys(state.roleRates).map(role => `
+              <div class="row-between" style="background:var(--bg-surface);padding:6px 10px;border-radius:6px;border:1px solid var(--border)">
+                <span class="mini" style="font-weight:700">${role}</span>
+                <input class="txt" type="number" style="width:70px;padding:3px 6px;font-size:11.5px" value="${state.roleRates[role]}" onchange="state.roleRates['${role}']=Number(this.value)||45;render();persist()">
+              </div>
+            `).join("")}
+          </div>
+        </div>
+
+        <!-- Backup & Restore Hub -->
+        <div class="card">
+          <b style="font-size:13px;margin-bottom:6px;display:block">📦 Workspace Backup & Data Mobility</b>
+          <div class="row" style="gap:10px;margin-top:8px">
+            <button class="btn btn-dark" onclick="exportFullBackupJSON()">⬇ Export Backup (.json)</button>
+            <button class="btn btn-dark" onclick="triggerJSONRestore()">⬆ Restore Backup (.json)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-dark" onclick="setState({settingsOpen:false})">Done</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// --- Notifications Drawer ---
+function renderNotificationsDrawer(notifs) {
+  return `
+  <div class="modal-backdrop" onclick="setState({notifOpen:false})">
+    <div class="cmd-window" style="max-width:480px" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <b style="font-size:13.5px">🔔 Notifications & Alerts (${notifs.length})</b>
+        <button class="btn-icon" onclick="setState({notifOpen:false})">✕</button>
+      </div>
+      <div style="max-height:340px;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px">
+        ${notifs.map(n => `
+          <div class="row-between" style="background:var(--bg-panel);padding:10px 12px;border-radius:8px;border:1px solid var(--border);cursor:${n.taskId ? 'pointer' : 'default'}" onclick="${n.taskId ? `setState({notifOpen:false,detailTaskId:'${n.taskId}'})` : ''}">
+            <div>
+              <div style="font-size:12.5px;font-weight:600">${esc(n.title)}</div>
+              <div class="mini" style="color:var(--text-muted);margin-top:2px">${n.time}</div>
+            </div>
+            <span class="pill" style="background:rgba(239,68,68,0.15);color:var(--red)">Alert</span>
+          </div>
+        `).join("")}
+        ${notifs.length === 0 ? `<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12.5px">No unread alerts. Board is healthy!</div>` : ""}
+      </div>
+    </div>
+  </div>`;
+}
+
+// --- Smart Rebalance Modal ---
+function renderRebalanceModal(person) {
+  const openP2P3 = state.tasks.filter(t => t.assignee === person && t.status !== "Done" && (t.priority === "P2" || t.priority === "P3"));
+  const wd = workloadData();
+  const availablePeople = wd.filter(w => w.battery.p <= 40).map(w => w.name);
+
+  return `
+  <div class="modal-backdrop" onclick="setState({rebalanceModalPerson:null})">
+    <div class="modal-window" style="max-width:550px" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="row">
+          <span style="font-size:16px">⚡</span>
+          <b style="font-size:14px">Smart Workload Rebalancer</b>
+        </div>
+        <button class="btn-icon" onclick="setState({rebalanceModalPerson:null})">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div>
+          <div style="font-size:13px;margin-bottom:6px">Target Member: <b style="color:var(--orange)">${person}</b></div>
+          <div class="mini">Automatically offloads non-urgent (P2/P3) tasks to available members with healthy capacity (<40% battery).</div>
+        </div>
+
+        <div class="card">
+          <b style="font-size:12px;margin-bottom:6px;display:block">Tasks to Reallocate (${openP2P3.length}):</b>
+          ${openP2P3.map(t => `
+            <div class="row-between" style="background:var(--bg-surface);padding:6px 10px;border-radius:6px;margin-bottom:4px;font-size:12px">
+              <span><b>[${t.priority}]</b> ${esc(t.title)}</span>
+              <span class="mini">Est: ${fmtMins(t.estimateMins)}</span>
+            </div>
+          `).join("")}
+          ${openP2P3.length === 0 ? `<div class="mini">No non-urgent P2/P3 tasks to offload.</div>` : ""}
+        </div>
+
+        <div class="card">
+          <b style="font-size:12px;margin-bottom:6px;display:block">Target Recipients (<40% Battery):</b>
+          <div class="row" style="flex-wrap:wrap">
+            ${availablePeople.map(ap => `<span class="avatar-chip" style="color:var(--green)">👤 ${ap}</span>`).join("")}
+            ${availablePeople.length === 0 ? `<span class="mini" style="color:var(--red)">No members under 40% capacity available.</span>` : ""}
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-dark" onclick="setState({rebalanceModalPerson:null})">Cancel</button>
+        <button class="btn btn-purple" ${openP2P3.length === 0 || availablePeople.length === 0 ? 'disabled' : ''} onclick="executeSmartRebalance('${person}')">⚡ Execute 1-Click Rebalance</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// --- Universal Command Palette ---
+function openCommandPalette() {
+  state.cmdOpen = true;
+  state.cmdQuery = "";
+  state.cmdSelectedIndex = 0;
+  render();
+  setTimeout(() => {
+    const el = document.getElementById("cmdInput");
+    if (el) el.focus();
+  }, 50);
+}
+
+function renderCommandPalette(isAdmin) {
+  const q = state.cmdQuery.toLowerCase().trim();
+
+  const defaultActions = [
+    { label: "Create New Ticket", icon: "✨", action: () => { state.cmdOpen = false; state.newTaskOpen = true; state.view = "board"; render(); } },
+    { label: "Cycle Theme (Obsidian / Nordic / Nebula)", icon: "🎨", action: () => { state.cmdOpen = false; cycleTheme(); } },
+    { label: "Schedule a Meeting", icon: "🗓", action: () => { state.cmdOpen = false; state.view = "meetings"; state.meetingDraft = { title: '', agenda: '', objective: '', participants: [], link: '', duration: 15, ticketId: null }; render(); } },
+    { label: "Switch to Kanban View", icon: "📋", action: () => { state.cmdOpen = false; state.view = "board"; state.boardMode = "kanban"; render(); } },
+    { label: "Switch to Table Spreadsheet View", icon: "📊", action: () => { state.cmdOpen = false; state.view = "board"; state.boardMode = "table"; render(); } },
+    { label: "View Dependency Flow Map", icon: "🔗", action: () => { state.cmdOpen = false; state.view = "flowmap"; render(); } },
+    { label: "Export Tickets CSV", icon: "📥", action: () => { state.cmdOpen = false; exportTickets(); } }
+  ];
+
+  if (isAdmin) {
+    defaultActions.unshift({ label: "Open System Settings (Admin Only)", icon: "⚙️", action: () => { state.cmdOpen = false; setState({ settingsOpen: true }); } });
+    defaultActions.push({ label: "Export Workspace JSON Backup", icon: "📦", action: () => { state.cmdOpen = false; exportFullBackupJSON(); } });
+  }
+
+  const matchedTasks = state.tasks.filter(t => t.title.toLowerCase().includes(q) || t.assignee.toLowerCase().includes(q)).slice(0, 5);
+  const matchedActions = defaultActions.filter(a => a.label.toLowerCase().includes(q));
+
+  return `
+  <div class="modal-backdrop" onclick="setState({cmdOpen:false})">
+    <div class="cmd-window" onclick="event.stopPropagation()">
+      <div class="cmd-input-box">
+        <span style="font-size:16px;color:var(--text-muted)">🔍</span>
+        <input class="cmd-input" id="cmdInput" placeholder="Type a command or search tickets…" value="${esc(state.cmdQuery)}" oninput="state.cmdQuery=this.value;render()" onkeydown="handleCmdKey(event)">
+        <span class="kbd-badge">ESC</span>
+      </div>
+      <div class="cmd-list">
+        ${matchedActions.length > 0 ? `
+          <div class="cmd-group-title">Quick Actions</div>
+          ${matchedActions.map((a, i) => `
+            <div class="cmd-item" onclick="defaultActions[${defaultActions.indexOf(a)}].action()">
+              <span class="row"><span>${a.icon}</span> <b>${esc(a.label)}</b></span>
+              <span class="mini">Action</span>
+            </div>
+          `).join("")}
+        ` : ""}
+
+        ${matchedTasks.length > 0 ? `
+          <div class="cmd-group-title" style="margin-top:6px">Matching Tickets</div>
+          ${matchedTasks.map(t => `
+            <div class="cmd-item" onclick="setState({cmdOpen:false,detailTaskId:'${t.id}'})">
+              <span class="row">
+                <span class="pill" style="color:${PRIORITY_COLOR[t.priority]};background:${PRIORITY_COLOR[t.priority]}22">${t.priority}</span>
+                <span>${esc(t.title)}</span>
+              </span>
+              <span class="mini">👤 ${t.assignee} · ${t.status}</span>
+            </div>
+          `).join("")}
+        ` : ""}
+
+        ${matchedActions.length === 0 && matchedTasks.length === 0 ? `
+          <div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">No results found for "${esc(state.cmdQuery)}"</div>
+        ` : ""}
+      </div>
+    </div>
+  </div>`;
+}
+
+function handleCmdKey(e) {
+  if (e.key === "Escape") setState({ cmdOpen: false });
+}
+
+// --- Global Keyboard Shortcuts ---
+window.addEventListener("keydown", (e) => {
+  const tag = e.target.tagName.toLowerCase();
+  const isInput = tag === "input" || tag === "textarea" || tag === "select";
+
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+    e.preventDefault();
+    if (state.cmdOpen) setState({ cmdOpen: false });
+    else openCommandPalette();
+    return;
+  }
+
+  if (e.key === "Escape") {
+    if (state.cmdOpen) setState({ cmdOpen: false });
+    else if (state.detailTaskId) setState({ detailTaskId: null });
+    else if (state.rebalanceModalPerson) setState({ rebalanceModalPerson: null });
+    else if (state.settingsOpen) setState({ settingsOpen: false });
+    else if (state.notifOpen) setState({ notifOpen: false });
+    else if (state.newTaskOpen) setState({ newTaskOpen: false });
+    else if (state.guideOpen) setState({ guideOpen: false });
+    return;
+  }
+
+  if (!isInput && !state.cmdOpen && !state.detailTaskId) {
+    if (e.key === "n" || e.key === "N") { e.preventDefault(); setState({ newTaskOpen: true, view: "board" }); }
+    else if (e.key === "b" || e.key === "B") { setState({ view: "board" }); }
+    else if (e.key === "t" || e.key === "T") { setState({ view: "team" }); }
+    else if (e.key === "c" || e.key === "C") { setState({ view: "calendar" }); }
+    else if (e.key === "m" || e.key === "M") { setState({ view: "meetings" }); }
+    else if (e.key === "d" || e.key === "D") { setState({ view: "dashboard" }); }
+    else if (e.key === "r" || e.key === "R") { setState({ view: "reports" }); }
+    else if (e.key === "?") { setState({ guideOpen: !state.guideOpen }); }
+  }
+});
+
+// --- Team, Calendar, Meetings, Dashboard, Reports Views ---
+function renderTeam(isAdmin) {
+  const wd = workloadData();
+  const maxBar = Math.max(1, ...wd.map(w => w.open + w.done));
+  const rechargeCandidates = wd.filter(w => w.battery.level === "High Utilization" || w.battery.level === "Fully Utilized");
+
+  return `
+  <div>
+    <div class="mini" style="margin-bottom:12px">Open vs Done tickets, time logged, and weekly battery per team member</div>
+    <div class="card" style="margin-bottom:18px">
+      <div style="display:flex;align-items:flex-end;gap:12px;height:160px">
+        ${wd.map(p => `
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">
+            <div style="width:70%;background:var(--green);height:${(p.done / maxBar) * 100}%;border-radius:4px 4px 0 0"></div>
+            <div style="width:70%;background:var(--blue);height:${(p.open / maxBar) * 100}%;border-radius:4px 4px 0 0"></div>
+            <div class="mini" style="margin-top:6px;font-weight:700">${p.name}</div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+
+    <div class="grid-team" style="margin-bottom:18px">
+      ${wd.map(p => {
+        const isHighOrFull = p.battery.level === "High Utilization" || p.battery.level === "Fully Utilized";
+        return `
+        <div class="card">
+          <div class="row-between">
+            <b style="font-size:13.5px">${p.name}</b>
+            <span style="color:${p.battery.color}">🔋</span>
+          </div>
+          <div class="mini" style="margin-top:4px">${p.open} open · ${p.done} done</div>
+          <div class="mini" style="color:var(--text-muted);margin-top:2px">${fmtMins(p.mins)} logged</div>
+          <div class="bar-outer"><div class="bar-inner" style="width:${p.battery.p}%;background:${p.battery.color}"></div></div>
+          <div class="row-between" style="margin-top:8px">
+            <div class="mini" style="color:${p.battery.color};font-weight:700">${p.battery.level} (${p.battery.p}%)</div>
+            ${isHighOrFull ? `<button class="btn btn-purple" style="padding:3px 8px;font-size:10.5px" onclick="setState({rebalanceModalPerson:'${p.name}'})">⚡ Rebalance</button>` : ""}
+          </div>
+        </div>`;
+      }).join("")}
+    </div>
+
+    <div class="card">
+      <div style="font-size:13.5px;font-weight:700;margin-bottom:10px">☕ Recharge Day Recommendations</div>
+      ${rechargeCandidates.length === 0 ? '<div class="mini">Nobody is currently over 70% utilization. Good balance across team!</div>' : ""}
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${rechargeCandidates.map(p => {
+          const status = state.recharge[p.name]?.status;
+          return `
+          <div class="row-between" style="background:var(--bg-surface);border-radius:8px;padding:10px 14px;border:1px solid var(--border)">
+            <div><b>${p.name}</b> <span style="color:${p.battery.color}">· ${p.battery.level} (${p.battery.p}%)</span></div>
+            <div class="row">
+              ${status ? `<span class="mini" style="color:${status === 'Approved' ? 'var(--green)' : 'var(--orange)'};font-weight:700">${status}</span>` : ""}
+              ${!status ? `<button class="btn btn-dark" style="padding:5px 10px;font-size:11px" onclick="state.recharge['${p.name}']={status:'Recommended'};render();persist()">Recommend</button>` : ""}
+              ${status === "Recommended" ? `<button class="btn btn-green" style="padding:5px 10px;font-size:11px" onclick="state.recharge['${p.name}']={status:'Approved'};render();persist()">Approve Recharge</button>` : ""}
+            </div>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderCalendar() {
+  const weekStart = getWeekStart(state.calWeek);
+  const weekDays = Array.from({ length: 7 }, (_, i) => { const d = new Date(weekStart); d.setDate(weekStart.getDate() + i); return d; });
+  const weekLabel = state.calWeek === -1 ? "Last Week" : state.calWeek === 0 ? "This Week" : "Next Week";
+  const tk = todayKey();
+
+  return `
+  <div>
+    <div class="row" style="margin-bottom:16px">
+      <button class="btn btn-dark" ${state.calWeek === -1 ? 'disabled' : ''} onclick="setState({calWeek:Math.max(-1,state.calWeek-1)})">◀</button>
+      <div style="font-weight:700;font-size:14px;flex:1;text-align:center">${weekLabel} · <span class="mini">${fmtDate(weekDays[0])} – ${fmtDate(weekDays[6])}</span></div>
+      <button class="btn btn-dark" ${state.calWeek === 1 ? 'disabled' : ''} onclick="setState({calWeek:Math.min(1,state.calWeek+1)})">▶</button>
+      <button class="btn btn-dark" onclick="setState({calWeek:0})">Today</button>
+      ${selectHtml("calperf", state.filterPerson, ["All", ...state.people], `setState({filterPerson:this.value})`)}
+    </div>
+
+    <div class="cal-grid">
+      ${weekDays.map((day, i) => {
+        const dk = dateKey(day); const isToday = dk === tk;
+        const dayTasks = state.tasks.filter(t => t.dueDate === dk && (state.filterPerson === "All" || t.assignee === state.filterPerson));
+        const dayMeetings = state.meetings.filter(m => m.date === dk);
+        return `
+        <div class="daycell" style="${isToday ? 'border-color:var(--blue);background:rgba(59,130,246,0.06)' : ''}">
+          <div class="row-between" style="margin-bottom:10px">
+            <div><div class="mini">${DAYS[i]}</div><div style="font-size:15px;font-weight:800;color:${isToday ? 'var(--blue)' : 'var(--text-primary)'}">${day.getDate()}</div></div>
+            <button class="btn-icon" style="background:var(--bg-panel-elevated);border-radius:6px;padding:3px 7px" onclick="setState({calDraft:'${dk}',calDraftTitle:''})">+</button>
+          </div>
+
+          ${state.calDraft === dk ? `
+          <div style="margin-bottom:10px">
+            <input class="txt" style="width:100%;padding:5px 8px;font-size:11.5px" placeholder="Task title…" value="${esc(state.calDraftTitle)}" oninput="state.calDraftTitle=this.value" onkeydown="if(event.key==='Enter')addCalTask('${dk}');if(event.key==='Escape')setState({calDraft:null})">
+            <div class="row" style="margin-top:5px">
+              <button class="btn btn-green" style="flex:1;padding:4px 0;font-size:11px" onclick="addCalTask('${dk}')">Add</button>
+              <button class="btn btn-dark" style="flex:1;padding:4px 0;font-size:11px" onclick="setState({calDraft:null})">Cancel</button>
+            </div>
+          </div>` : ""}
+
+          <div style="display:flex;flex-direction:column;gap:6px">
+            ${dayMeetings.map(m => `<div style="background:var(--bg-surface);border-radius:7px;padding:6px 8px;border-left:3px solid var(--purple)"><div style="font-size:11.5px;font-weight:700">${esc(m.title)}</div></div>`).join("")}
+            ${dayTasks.map(t => `
+              <div style="background:var(--bg-surface);border-radius:7px;padding:6px 8px;border-left:3px solid ${PRIORITY_COLOR[t.priority]};cursor:pointer" onclick="setState({detailTaskId:'${t.id}'})">
+                <div style="font-size:11.5px;font-weight:600">${esc(t.title)}</div>
+                <div class="row" style="margin-top:4px"><span style="font-size:9.5px;color:${PRIORITY_COLOR[t.priority]};font-weight:700">${t.priority}</span><span style="font-size:9.5px;color:${STATUS_COLOR[t.status] || 'var(--text-primary)'}">${t.status}</span></div>
+              </div>
+            `).join("")}
+            ${dayTasks.length === 0 && dayMeetings.length === 0 ? `<div style="font-size:11px;color:var(--border-bright);text-align:center;margin-top:20px">—</div>` : ""}
+          </div>
+        </div>`;
+      }).join("")}
+    </div>
+  </div>`;
+}
+
+function renderMeetings() {
+  const md = state.meetingDraft;
+  return `
+  <div>
+    <div class="row-between" style="margin-bottom:16px">
+      <div class="mini">15-minute quick syncs with agenda, linked tickets, and actionable decision logs</div>
+      <button class="btn btn-blue" onclick="state.meetingDraft={title:'',agenda:'',objective:'',participants:[],link:'',duration:15,ticketId:null};render()">+ New Meeting</button>
+    </div>
+
+    ${md ? `
+    <div class="card" style="margin-bottom:18px;border-color:var(--blue)">
+      <div class="row" style="flex-wrap:wrap;margin-bottom:10px">
+        <input class="txt" style="flex:2 1 240px" placeholder="Meeting Title *" value="${esc(md.title)}" oninput="state.meetingDraft.title=this.value">
+        <input class="txt" type="number" min="5" style="width:130px" placeholder="Duration (min)" value="${md.duration}" oninput="state.meetingDraft.duration=Number(this.value)||15">
+        <input class="txt" style="flex:2 1 240px" placeholder="Google Meet / Zoom link" value="${esc(md.link)}" oninput="state.meetingDraft.link=this.value">
+      </div>
+      <textarea class="txt" style="margin-bottom:10px;min-height:50px" placeholder="Meeting Objective" oninput="state.meetingDraft.objective=this.value">${esc(md.objective)}</textarea>
+      <textarea class="txt" style="margin-bottom:10px;min-height:50px" placeholder="Meeting Agenda" oninput="state.meetingDraft.agenda=this.value">${esc(md.agenda)}</textarea>
+      <div class="row" style="flex-wrap:wrap;margin-bottom:12px">
+        <span class="mini" style="font-weight:700">Participants:</span>
+        ${state.people.filter(p => p !== "Unassigned").map(p => `
+          <label class="labeled" style="background:var(--bg-surface);padding:4px 9px;border-radius:6px;cursor:pointer;border:1px solid var(--border)">
+            <input type="checkbox" ${md.participants.includes(p) ? 'checked' : ''} onchange="if(this.checked){state.meetingDraft.participants.push('${p}')}else{state.meetingDraft.participants=state.meetingDraft.participants.filter(x=>x!=='${p}')}">${p}
+          </label>
+        `).join("")}
+      </div>
+      <div class="row">
+        <button class="btn btn-green" onclick="saveMeeting()">Save Meeting</button>
+        <button class="btn btn-dark" onclick="setState({meetingDraft:null})">Cancel</button>
+      </div>
+    </div>` : ""}
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      ${state.meetings.length === 0 ? '<div class="mini">No meetings scheduled.</div>' : ""}
+      ${state.meetings.slice().reverse().map(m => {
+        const linkedTask = state.tasks.find(t => t.id === m.ticketId);
+        return `
+        <div class="card">
+          <div class="row-between">
+            <div>
+              <div style="font-weight:800;font-size:14px">${esc(m.title)}</div>
+              <div class="mini" style="margin-top:2px">${m.date} · ${m.duration} min ${linkedTask ? `· Linked to: <b>${esc(linkedTask.title)}</b>` : ""}</div>
+              ${m.participants?.length ? `<div class="mini" style="color:var(--text-muted);margin-top:2px">Attendees: ${m.participants.join(", ")}</div>` : ""}
+            </div>
+            <button class="btn-icon" onclick="deleteMeeting('${m.id}')">🗑</button>
+          </div>
+          ${m.objective ? `<div class="mini" style="margin-top:8px"><b>Objective:</b> ${esc(m.objective)}</div>` : ""}
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px">
+            <textarea class="txt" style="font-size:11.5px;min-height:55px" placeholder="Discussion Notes…" onblur="updateMeeting('${m.id}','notes',this.value)">${esc(m.notes)}</textarea>
+            <textarea class="txt" style="font-size:11.5px;min-height:55px" placeholder="Decisions Made…" onblur="updateMeeting('${m.id}','decisions',this.value)">${esc(m.decisions)}</textarea>
+            <div>
+              <textarea class="txt" style="font-size:11.5px;min-height:55px" placeholder="Action Items (e.g. Finalize budget @AR)…" onblur="updateMeeting('${m.id}','actionItems',this.value)">${esc(m.actionItems)}</textarea>
+              <button class="btn btn-purple" style="margin-top:6px;width:100%;font-size:11px" onclick="convertMeetingActionItemsToTickets('${m.id}')">⚡ Convert Action Items to Tickets</button>
+            </div>
+          </div>
+        </div>`;
+      }).join("")}
+    </div>
+  </div>`;
+}
+
+function renderDashboard() {
+  const tasks = state.tasks;
+  const totalTasks = tasks.length;
+  const categoryPie = state.categories.map(c => ({ name: c, value: tasks.filter(t => t.category === c).length }));
+  const statusCounts = state.statuses.map(s => ({ name: s, value: tasks.filter(t => t.status === s).length }));
+  const approvalCounts = APPROVAL_STAGES.map(s => ({ name: s, value: tasks.filter(t => t.approvalStatus === s).length })).filter(a => a.value > 0);
+  const wd = workloadData();
+  const batteryBuckets = ["Available", "Healthy", "High Utilization", "Fully Utilized"].map(lvl => ({ name: lvl, value: wd.filter(w => w.battery.level === lvl).length }));
+  const bucketColor = { Available: "#10B981", Healthy: "#3B82F6", "High Utilization": "#F59E0B", "Fully Utilized": "#EF4444" };
+  const catColors = ["#3B82F6", "#A855F7", "#F59E0B", "#10B981", "#EC4899"];
+
+  return `
+  <div class="dash-grid">
+    <div class="card">
+      <div class="mini" style="font-weight:700;margin-bottom:10px">Tickets by Category</div>
+      ${categoryPie.map((c, i) => barRow(c.name, c.value, totalTasks, catColors[i % catColors.length])).join("")}
+    </div>
+    <div class="card">
+      <div class="mini" style="font-weight:700;margin-bottom:10px">Status Breakdown</div>
+      ${statusCounts.map(s => barRow(s.name, s.value, totalTasks, STATUS_COLOR[s.name] || 'var(--blue)')).join("")}
+    </div>
+    <div class="card">
+      <div class="mini" style="font-weight:700;margin-bottom:10px">Approval Pipeline</div>
+      ${approvalCounts.length === 0 ? '<div class="mini">No tickets currently in approval flow.</div>' : approvalCounts.map(a => barRow(a.name, a.value, totalTasks, APPROVAL_COLOR[a.name])).join("")}
+    </div>
+    <div class="card">
+      <div class="mini" style="font-weight:700;margin-bottom:10px">Team Battery Distribution</div>
+      ${batteryBuckets.map(b => barRow(b.name, b.value, wd.length || 1, bucketColor[b.name])).join("")}
+    </div>
+    <div class="card" style="grid-column:1/-1">
+      <div class="mini" style="font-weight:700;margin-bottom:10px">Urgent Priority Queue (Open P0 Tickets)</div>
+      ${tasks.filter(t => t.priority === "P0" && t.status !== "Done").map(t => `
+        <div class="row-between" style="padding:8px 12px;background:var(--bg-surface);border-radius:8px;font-size:12.5px;margin-bottom:6px;border:1px solid var(--border)">
+          <span><b>${esc(t.title)}</b> <span class="mini">(${t.assignee})</span></span>
+          <span style="color:${STATUS_COLOR[t.status] || 'var(--text-primary)'};font-weight:700">${t.status}</span>
+        </div>
+      `).join("")}
+      ${tasks.filter(t => t.priority === "P0" && t.status !== "Done").length === 0 ? '<div class="mini">No open P0 items — clean board!</div>' : ""}
+    </div>
+  </div>`;
+}
+
+function barRow(label, value, total, color) {
+  return `
+  <div class="row" style="margin-bottom:8px">
+    <span style="width:130px;font-size:12px;color:${color};font-weight:600">${label}</span>
+    <div style="flex:1;height:8px;background:var(--bg-surface);border-radius:4px;overflow:hidden">
+      <div style="width:${total ? (value / total) * 100 : 0}%;height:100%;background:${color};border-radius:4px"></div>
+    </div>
+    <span class="mini" style="font-weight:700">${value}</span>
+  </div>`;
+}
+
+function renderReports(isAdmin) {
+  return `
+  <div>
+    <div class="mini" style="margin-bottom:16px">Export current board data into CSV spreadsheets for analytics and reporting</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px">
+      ${reportCard("Tickets Report", "All tickets with owner, contributors, reviewer, approvals, effort, and deadlines.", "exportTickets()")}
+      ${reportCard("Team Utilization", "Open/done counts, logged minutes, and weekly battery metrics per team member.", "exportUtilization()")}
+      ${reportCard("Approval Status", "Detailed audit trail of all tickets requiring management sign-off.", "exportApprovals()")}
+      ${reportCard("Meeting Metrics", "All 15-minute quick syncs, durations, and participant logs.", "exportMeetings()")}
+      ${reportCard("Burnout Risk", "List of employees at High/Full utilization for proactive recharge scheduling.", "exportBurnout()")}
+    </div>
+  </div>`;
+}
+
+function reportCard(title, desc, fn) {
+  return `
+  <div class="card">
+    <div style="font-size:14px;font-weight:800;margin-bottom:4px">${title}</div>
+    <div class="mini" style="margin-bottom:12px;line-height:1.4">${desc}</div>
+    <button class="btn btn-dark" onclick="${fn}">⬇ Export CSV</button>
+  </div>`;
+}
+
+function renderConfidential() {
+  const wd = workloadData().slice().sort((a, b) => (b.done * 2 + b.mins / 60) - (a.done * 2 + a.mins / 60));
+  return `
+  <div>
+    <div class="row" style="margin-bottom:6px">🔒 <b style="font-size:14px">Confidential Appraisal & Leadership Portal</b></div>
+    <div class="lock-banner">Visible to UN / ASG roles. Data is isolated locally in your browser.</div>
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:10px">🏆 Top Contributor Leaderboard</div>
+      ${wd.map((p, i) => `
+        <div class="row-between" style="background:var(--bg-surface);border-radius:8px;padding:8px 12px;margin-bottom:6px;border:1px solid var(--border)">
+          <div style="font-size:13px">${i === 0 ? '🥇 ' : i === 1 ? '🥈 ' : i === 2 ? '🥉 ' : ''}<b>${p.name}</b> <span style="color:var(--text-muted)">· ${state.roles[p.name] || 'Employee'}</span></div>
+          <div class="mini"><b>${p.done}</b> completed · <b>${fmtMins(p.mins)}</b> logged</div>
+        </div>
+      `).join("")}
+    </div>
+
+    <div class="card">
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:10px">Confidential Appraisal Notes</div>
+      ${state.people.filter(p => p !== "Unassigned").map(p => `
+        <div style="margin-bottom:12px">
+          <div class="mini" style="font-weight:700;margin-bottom:4px">${p} · ${state.roles[p] || 'Employee'}</div>
+          <textarea class="txt" style="min-height:50px" placeholder="Appraisal / merit performance notes…" onblur="state.confidential['${p}']=this.value;persist()">${esc(state.confidential[p] || "")}</textarea>
+        </div>
+      `).join("")}
+    </div>
+  </div>`;
+}
+
+function renderGuide() {
+  return `
+  <aside class="guide-panel">
+    <div class="row-between" style="padding:16px 20px;border-bottom:1px solid var(--border)">
+      <b style="font-size:13.5px">📖 Interactive Guide</b>
+      <button class="btn-icon" onclick="setState({guideOpen:false})">✕</button>
+    </div>
+    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:16px">
+      ${GUIDE.map(s => `
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px">${s.title}</div>
+          <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px">
+            ${s.steps.map(st => `<li style="font-size:11.5px;color:var(--text-secondary);line-height:1.5">${st}</li>`).join("")}
+          </ul>
+        </div>
+      `).join("")}
+      <div style="border-top:1px solid var(--border);padding-top:12px">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px">KEYBOARD SHORTCUTS</div>
+        <div class="mini" style="line-height:1.8">
+          <kbd class="kbd-badge">Ctrl+K</kbd> Command Palette<br>
+          <kbd class="kbd-badge">N</kbd> New Ticket<br>
+          <kbd class="kbd-badge">B / T / C / M</kbd> Switch Tabs<br>
+          <kbd class="kbd-badge">ESC</kbd> Close Modals
+        </div>
+      </div>
+    </div>
+  </aside>`;
+}
+
+// Live timer tick every second
+setInterval(() => {
+  if (state.tasks.some(t => t.timerStart !== null)) {
+    if (!state.detailTaskId) {
+      render();
+    }
+  }
+}, 1000);
+
+// Initial Render & Apply Theme
+applyTheme(state.theme);
+render();
+</script>
+</body>
+</html>
