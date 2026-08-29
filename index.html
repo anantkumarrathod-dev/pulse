@@ -1086,6 +1086,65 @@ function addSubtask(taskId, text) {
   persist();
 }
 
+const SUBTASK_TEMPLATES = {
+  "Frontend": [
+    "UI/UX Specification Review",
+    "Responsive Layout & Mobile Check",
+    "Cross-Browser Testing",
+    "Code Review & PR Approval"
+  ],
+  "Backend": [
+    "Database Schema & Migration",
+    "API Endpoint Implementation",
+    "Unit & Integration Test Suite",
+    "Security & Validation Check"
+  ],
+  "Design": [
+    "Wireframing & Concept Sketches",
+    "High-Fidelity Figma Mockups",
+    "Design System Token Verification",
+    "Stakeholder Review & Feedback"
+  ],
+  "Marketing": [
+    "Copywriting & Messaging Strategy",
+    "Creative Assets & Graphics",
+    "Target Audience & Channel Mapping",
+    "Campaign Analytics & Tracking Setup"
+  ],
+  "Bug": [
+    "Reproduction & Log Traceback",
+    "Root Cause Analysis",
+    "Bug Fix Implementation",
+    "Regression Testing & Verification"
+  ],
+  "Research": [
+    "Background Analysis & Benchmark",
+    "Technical / Market Feasibility Study",
+    "Documentation & Summary Brief"
+  ]
+};
+
+function applySmartSubtaskTemplate(taskId, templateKey) {
+  const items = SUBTASK_TEMPLATES[templateKey];
+  if (!items) return;
+  state.tasks = state.tasks.map(t => {
+    if (t.id !== taskId) return t;
+    const existingTexts = (t.subtasks || []).map(s => s.text);
+    const newItems = items
+      .filter(txt => !existingTexts.includes(txt))
+      .map(txt => ({ id: "s" + Date.now() + Math.random().toString(36).substring(2, 5), text: txt, done: false }));
+    return {
+      ...t,
+      subtasks: [...(t.subtasks || []), ...newItems],
+      activity: logActivity(t, `Applied Smart Checklist Template: "${templateKey}"`)
+    };
+  });
+  showToast(`Applied "${templateKey}" subtask template!`, "⚡");
+  if (state.detailTaskId === taskId) updateModalDOM(taskId);
+  else render();
+  persist();
+}
+
 function toggleBlocker(taskId, blockerId) {
   state.tasks = state.tasks.map(t => {
     if (t.id !== taskId) return t;
@@ -2166,7 +2225,23 @@ function renderDetailModalBody(t, isAdmin) {
       <b style="font-size:13px">✅ Subtasks & Checklist (${completedCount}/${subtasks.length})</b>
       <span class="mini">${progressPct}% Complete</span>
     </div>
-    <div class="bar-outer" style="margin-bottom:12px"><div class="bar-inner" style="width:${progressPct}%;background:var(--green)"></div></div>
+    <div class="bar-outer" style="margin-bottom:10px"><div class="bar-inner" style="width:${progressPct}%;background:var(--green)"></div></div>
+    
+    <!-- ⚡ Smart Subtask Checklist Generator Bar -->
+    <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:8px 12px;margin-bottom:12px">
+      <div class="row-between" style="margin-bottom:6px">
+        <span class="mini" style="font-weight:700;color:var(--blue)">⚡ Auto-Suggest Smart Checklists:</span>
+        <span class="mini" style="color:var(--text-muted)">1-Click Template Injection</span>
+      </div>
+      <div class="row" style="flex-wrap:wrap;gap:6px">
+        ${Object.keys(SUBTASK_TEMPLATES).map(tmplKey => `
+          <button class="btn btn-dark" style="padding:3px 8px;font-size:10.5px;border-color:rgba(59,130,246,0.3)" onclick="applySmartSubtaskTemplate('${t.id}','${tmplKey}')">
+            + ${tmplKey} Template
+          </button>
+        `).join("")}
+      </div>
+    </div>
+
     <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
       ${subtasks.map(s => `
         <div class="checklist-item ${s.done ? 'done' : ''}">
