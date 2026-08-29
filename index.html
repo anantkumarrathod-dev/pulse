@@ -715,8 +715,6 @@
   .bar-inner { height: 100%; }
   .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
-  .daycell { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px; min-height: 180px; }
-  .guide-panel { width: 320px; border-left: 1px solid var(--border); background: var(--bg-surface); overflow-y: auto; max-height: 800px; flex-shrink: 0; }
   .flex { display: flex; }
   .row { display: flex; gap: 8px; align-items: center; }
   .row-between { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -813,14 +811,6 @@ const RAW_SEED = [
   ["Ad hoc", "Telephonic Enquiry", "P1", "To Do", ["tag-marketing"]],
   ["Ad hoc", "Follow Up Calls - Counseling SMM/SEM", "P0", "To Do", ["tag-marketing"]],
   ["Ad hoc", "Counseling Training", "P0", "To Do", ["tag-research"]],
-  ["Ad hoc", "Content Ideas - AG", "P2", "To Do", ["tag-design"]],
-];
-
-const GUIDE = [
-  { title: "1. Intuitive Navigation", steps: ["Tab labels are clean and uncluttered. Keyboard shortcuts (B, T, C, M, D, R, N, Ctrl+K) work intuitively in the background."] },
-  { title: "2. WIP Limits & Burndown Chart", steps: ["Visual burndown curve graph in Sprint Banner. Column WIP limits prevent team overload."] },
-  { title: "3. Dependency Flow Map", steps: ["Switch to the 🔗 Flow Map tab to view visual prerequisite tree diagrams."] },
-  { title: "4. Multi-Select Bulk Actions", steps: ["Use checkboxes in 📊 Table View to bulk move, reassign, or export tickets."] }
 ];
 
 // --- Helpers ---
@@ -923,7 +913,6 @@ let state = {
   cmdSelectedIndex: 0,
   draft: { title: "", description: "", category: "Projects", priority: "P1", sprint: "Sprint 14 (Current)", tags: [], assignee: "Unassigned", contributor2: "Unassigned", reviewer: "Unassigned", requiresApproval: false },
   meetingDraft: null,
-  guideOpen: false,
   calWeek: 0,
   calDraft: null,
   calDraftTitle: "",
@@ -1604,8 +1593,6 @@ function render() {
       <nav class="tabs">
         ${TABS.map(([k, l]) => `<button class="tab ${state.view === k ? 'active' : ''}" onclick="setState({view:'${k}'})">${l}</button>`).join("")}
       </nav>
-
-      <button class="tab" style="background:${state.guideOpen ? 'var(--bg-panel-elevated)' : 'transparent'};color:${state.guideOpen ? 'var(--blue)' : 'var(--text-muted)'}" onclick="setState({guideOpen:${!state.guideOpen}})">📖 Guide</button>
     </div>
   </header>
 
@@ -1623,7 +1610,6 @@ function render() {
 
   <div class="flex" style="flex:1">
     <main class="main-content">${renderView(isAdmin)}</main>
-    ${state.guideOpen ? renderGuide() : ""}
   </div>
 
   <!-- Detail Modal -->
@@ -2611,7 +2597,6 @@ window.addEventListener("keydown", (e) => {
     else if (state.settingsOpen) setState({ settingsOpen: false });
     else if (state.notifOpen) setState({ notifOpen: false });
     else if (state.newTaskOpen) setState({ newTaskOpen: false });
-    else if (state.guideOpen) setState({ guideOpen: false });
     return;
   }
 
@@ -2623,7 +2608,6 @@ window.addEventListener("keydown", (e) => {
     else if (e.key === "m" || e.key === "M") { setState({ view: "meetings" }); }
     else if (e.key === "d" || e.key === "D") { setState({ view: "dashboard" }); }
     else if (e.key === "r" || e.key === "R") { setState({ view: "reports" }); }
-    else if (e.key === "?") { setState({ guideOpen: !state.guideOpen }); }
   }
 });
 
@@ -2905,35 +2889,6 @@ function renderConfidential() {
       `).join("")}
     </div>
   </div>`;
-}
-
-function renderGuide() {
-  return `
-  <aside class="guide-panel">
-    <div class="row-between" style="padding:16px 20px;border-bottom:1px solid var(--border)">
-      <b style="font-size:13.5px">📖 Interactive Guide</b>
-      <button class="btn-icon" onclick="setState({guideOpen:false})">✕</button>
-    </div>
-    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:16px">
-      ${GUIDE.map(s => `
-        <div>
-          <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px">${s.title}</div>
-          <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px">
-            ${s.steps.map(st => `<li style="font-size:11.5px;color:var(--text-secondary);line-height:1.5">${st}</li>`).join("")}
-          </ul>
-        </div>
-      `).join("")}
-      <div style="border-top:1px solid var(--border);padding-top:12px">
-        <div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px">KEYBOARD SHORTCUTS</div>
-        <div class="mini" style="line-height:1.8">
-          <kbd class="kbd-badge">Ctrl+K</kbd> Command Palette<br>
-          <kbd class="kbd-badge">N</kbd> New Ticket<br>
-          <kbd class="kbd-badge">B / T / C / M</kbd> Switch Tabs<br>
-          <kbd class="kbd-badge">ESC</kbd> Close Modals
-        </div>
-      </div>
-    </div>
-  </aside>`;
 }
 
 // Live timer tick every second
