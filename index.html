@@ -882,6 +882,7 @@ function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); 
 let state = {
   theme: load("pulse-theme", "obsidian"),
   sprintMode: load("pulse-sprint-mode-v1", "scrum"),
+  boardName: load("pulse-board-name-v1", "Main Project Board"),
   categories: load("pulse-categories", ["Projects", "Ops", "Ad hoc"]),
   statuses: load("pulse-statuses", ["To Do", "WIP", "Pending", "Due", "Done"]),
   wipLimits: load("pulse-wip-limits-v2", DEFAULT_WIP_LIMITS),
@@ -939,8 +940,18 @@ function cycleTheme() {
   render();
 }
 
+function promptRenameBoard() {
+  const newName = prompt("Enter new Board Name:", state.boardName || "Main Project Board");
+  if (newName && newName.trim()) {
+    state.boardName = newName.trim();
+    showToast(`Board renamed to "${state.boardName}"`, "📌");
+    render(); persist();
+  }
+}
+
 function persist() {
   save("pulse-sprint-mode-v1", state.sprintMode);
+  save("pulse-board-name-v1", state.boardName);
   save("pulse-categories", state.categories);
   save("pulse-statuses", state.statuses);
   save("pulse-wip-limits-v1", state.wipLimits);
@@ -1562,8 +1573,13 @@ function render() {
       </div>
     </div>
 
-    <!-- Quick Search Command Trigger & Notification Bell Group -->
+    <!-- Theme Toggle, Quick Search & Notification Bell Group -->
     <div class="row" style="gap:8px">
+      <!-- 1-Button Theme Toggle -->
+      <button class="theme-btn" onclick="cycleTheme()" title="Click to cycle themes">
+        <span>${currentThemeLabel}</span>
+      </button>
+
       <div class="quick-search-trigger" onclick="openCommandPalette()">
         <span>🔍 Search or command…</span>
         <span class="kbd-badge">Ctrl + K</span>
@@ -1576,10 +1592,11 @@ function render() {
     </div>
 
     <div class="header-actions">
-      <!-- 1-Button Theme Toggle -->
-      <button class="theme-btn" onclick="cycleTheme()" title="Click to cycle themes">
-        <span>${currentThemeLabel}</span>
-      </button>
+      <!-- Board Name Badge -->
+      <div class="row" style="background:var(--bg-surface);border:1px solid var(--border);border-radius:9px;padding:5px 12px">
+        <span style="font-size:12px;font-weight:700;color:var(--blue)">📌 ${esc(state.boardName || "Main Project Board")}</span>
+        ${isAdmin ? `<button class="btn-icon" style="padding:2px 4px;font-size:11px;margin-left:4px" onclick="promptRenameBoard()" title="Rename Board (Admin)">✏️</button>` : ""}
+      </div>
 
       <!-- Settings Button (ADMIN ONLY) -->
       ${isAdmin ? `<button class="theme-btn" onclick="setState({settingsOpen:true})">⚙️ Settings</button>` : ""}
@@ -2285,6 +2302,16 @@ function renderSettingsModal() {
       </div>
 
       <div class="modal-body">
+        <!-- Workspace Board Name Branding -->
+        <div class="card">
+          <b style="font-size:13px;margin-bottom:6px;display:block">📌 Board Name & Branding</b>
+          <div class="mini" style="margin-bottom:10px">Customize the displayed Board Name across your team's workspace header.</div>
+          <div class="row">
+            <input class="txt" id="boardNameInput" style="flex:1;padding:6px 10px;font-size:12px" value="${esc(state.boardName || 'Main Project Board')}" placeholder="e.g. Engineering & Product Roadmap…">
+            <button class="btn btn-green" onclick="const name=document.getElementById('boardNameInput').value;if(name.trim()){state.boardName=name.trim();render();persist();showToast('Board name updated!','📌')}">Save Name</button>
+          </div>
+        </div>
+
         <!-- Workflow Methodology Mode (Scrum vs Continuous Flow) -->
         <div class="card" style="background:rgba(59,130,246,0.06);border-color:rgba(59,130,246,0.2)">
           <div class="row-between" style="margin-bottom:6px">
