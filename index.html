@@ -1546,10 +1546,73 @@ function addCalTask(dk) {
   render(); persist();
 }
 
+function generateGoogleMeetUrl() {
+  const chars = "abcdefghijklmnopqrstuvwxyz";
+  const p1 = Array.from({length:3}, () => chars[Math.floor(Math.random()*26)]).join("");
+  const p2 = Array.from({length:4}, () => chars[Math.floor(Math.random()*26)]).join("");
+  const p3 = Array.from({length:3}, () => chars[Math.floor(Math.random()*26)]).join("");
+  return `https://meet.google.com/${p1}-${p2}-${p3}`;
+}
+
+function getGoogleCalendarUrl(m) {
+  const title = encodeURIComponent(m.title || "Pulse Sync Meeting");
+  const details = encodeURIComponent(`Pulse Workforce Intelligence Meeting\n\nObjective: ${m.objective || 'N/A'}\nAgenda: ${m.agenda || 'N/A'}\nGoogle Meet Link: ${m.link || ''}`);
+  const location = encodeURIComponent(m.link || "Google Meet");
+  
+  const meetingDate = m.date ? new Date(m.date) : new Date();
+  const startTime = meetingDate.toISOString().replace(/-|:|\.\d\d\d/g, "");
+  const endDate = new Date(meetingDate.getTime() + (m.duration || 15) * 60000);
+  const endTime = endDate.toISOString().replace(/-|:|\.\d\d\d/g, "");
+  
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startTime}/${endTime}&details=${details}&location=${location}`;
+}
+
+function downloadICSFile(m) {
+  const meetingDate = m.date ? new Date(m.date) : new Date();
+  const startTime = meetingDate.toISOString().replace(/-|:|\.\d\d\d/g, "");
+  const endDate = new Date(meetingDate.getTime() + (m.duration || 15) * 60000);
+  const endTime = endDate.toISOString().replace(/-|:|\.\d\d\d/g, "");
+  
+  const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Pulse Workforce Intelligence//EN
+CALSCALE:GREGORIAN
+METHOD:REQUEST
+BEGIN:VEVENT
+UID:pulse-meeting-${m.id || Date.now()}@pulse.io
+DTSTAMP:${startTime}
+DTSTART:${startTime}
+DTEND:${endTime}
+SUMMARY:${m.title || "Pulse Meeting"}
+DESCRIPTION:${m.objective || "Pulse Meeting"} - Google Meet: ${m.link || ""}
+LOCATION:${m.link || "Google Meet"}
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR`;
+
+  const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `pulse_meeting_${m.id || Date.now()}.ics`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast("Downloaded .ics Calendar file", "📥");
+}
+
 function openMeetingFor(taskId) {
   const task = state.tasks.find(t => t.id === taskId);
   const participants = task ? [task.assignee, task.contributor2].filter(p => p && p !== "Unassigned") : [];
-  state.meetingDraft = { title: task ? `Sync: ${task.title}` : "", agenda: "", objective: "", participants, link: "", duration: 15, ticketId: task ? task.id : null };
+  state.meetingDraft = {
+    title: task ? `Sync: ${task.title}` : "",
+    agenda: "",
+    objective: "",
+    participants,
+    link: generateGoogleMeetUrl(),
+    duration: 15,
+    ticketId: task ? task.id : null,
+    date: todayKey()
+  };
   state.view = "meetings";
   render();
 }
@@ -1557,9 +1620,19 @@ function openMeetingFor(taskId) {
 function saveMeeting() {
   const md = state.meetingDraft;
   if (!md || !md.title.trim()) return;
-  state.meetings.push({ id: "m" + Date.now(), ...md, date: todayKey(), notes: "", decisions: "", actionItems: "" });
+  if (!md.link) md.link = generateGoogleMeetUrl();
+  const meetingDate = md.date || todayKey();
+  const newMeeting = {
+    id: "m" + Date.now(),
+    ...md,
+    date: meetingDate,
+    notes: "",
+    decisions: "",
+    actionItems: ""
+  };
+  state.meetings.push(newMeeting);
   state.meetingDraft = null;
-  showToast(`Meeting "${md.title}" saved`, "🎥");
+  showToast(`Meeting "${md.title}" saved & synced to Google Calendar!`, "📅");
   render(); persist();
 }
 function updateMeeting(id, field, value) { state.meetings = state.meetings.map(m => m.id === id ? { ...m, [field]: value } : m); persist(); }
@@ -3053,7 +3126,15 @@ function renderCalendar() {
           </div>` : ""}
 
           <div style="display:flex;flex-direction:column;gap:6px">
-            ${dayMeetings.map(m => `<div style="background:var(--bg-surface);border-radius:7px;padding:6px 8px;border-left:3px solid var(--purple)"><div style="font-size:11.5px;font-weight:700">${esc(m.title)}</div></div>`).join("")}
+            ${dayMeetings.map(m => `
+              <div style="background:var(--bg-surface);border-radius:7px;padding:6px 8px;border-left:3px solid var(--purple)">
+                <div style="font-size:11.5px;font-weight:700">🎥 ${esc(m.title)}</div>
+                <div class="row" style="gap:4px;margin-top:4px">
+                  <a href="${m.link || generateGoogleMeetUrl()}" target="_blank" class="pill" style="font-size:9.5px;background:rgba(59,130,246,0.2);color:var(--blue);text-decoration:none">🎥 Meet</a>
+                  <a href="${getGoogleCalendarUrl(m)}" target="_blank" class="pill" style="font-size:9.5px;background:rgba(16,185,129,0.2);color:var(--green);text-decoration:none">📅 GCal</a>
+                </div>
+              </div>
+            `).join("")}
             ${dayTasks.map(t => `
               <div style="background:var(--bg-surface);border-radius:7px;padding:6px 8px;border-left:3px solid ${PRIORITY_COLOR[t.priority]};cursor:pointer" onclick="setState({detailTaskId:'${t.id}'})">
                 <div style="font-size:11.5px;font-weight:600">${esc(t.title)}</div>
@@ -3081,8 +3162,12 @@ function renderMeetings() {
     <div class="card" style="margin-bottom:18px;border-color:var(--blue)">
       <div class="row" style="flex-wrap:wrap;margin-bottom:10px">
         <input class="txt" style="flex:2 1 240px" placeholder="Meeting Title *" value="${esc(md.title)}" oninput="state.meetingDraft.title=this.value">
-        <input class="txt" type="number" min="5" style="width:130px" placeholder="Duration (min)" value="${md.duration}" oninput="state.meetingDraft.duration=Number(this.value)||15">
-        <input class="txt" style="flex:2 1 240px" placeholder="Google Meet / Zoom link" value="${esc(md.link)}" oninput="state.meetingDraft.link=this.value">
+        <input class="txt" type="number" min="5" style="width:110px" placeholder="Duration (min)" value="${md.duration}" oninput="state.meetingDraft.duration=Number(this.value)||15">
+        <input class="txt" type="date" style="width:135px" value="${md.date || todayKey()}" oninput="state.meetingDraft.date=this.value">
+        <div class="row" style="flex:2 1 260px">
+          <input class="txt" id="meet-link-input" style="flex:1" placeholder="Google Meet Video Link" value="${esc(md.link || generateGoogleMeetUrl())}" oninput="state.meetingDraft.link=this.value">
+          <button class="btn btn-dark" style="font-size:11px" onclick="const link=generateGoogleMeetUrl();state.meetingDraft.link=link;document.getElementById('meet-link-input').value=link;render()">🎥 Generate Meet</button>
+        </div>
       </div>
       <textarea class="txt" style="margin-bottom:10px;min-height:50px" placeholder="Meeting Objective" oninput="state.meetingDraft.objective=this.value">${esc(md.objective)}</textarea>
       <textarea class="txt" style="margin-bottom:10px;min-height:50px" placeholder="Meeting Agenda" oninput="state.meetingDraft.agenda=this.value">${esc(md.agenda)}</textarea>
@@ -3095,7 +3180,7 @@ function renderMeetings() {
         `).join("")}
       </div>
       <div class="row">
-        <button class="btn btn-green" onclick="saveMeeting()">Save Meeting</button>
+        <button class="btn btn-green" onclick="saveMeeting()">Save & Sync Meeting</button>
         <button class="btn btn-dark" onclick="setState({meetingDraft:null})">Cancel</button>
       </div>
     </div>` : ""}
@@ -3104,15 +3189,23 @@ function renderMeetings() {
       ${state.meetings.length === 0 ? '<div class="mini">No meetings scheduled.</div>' : ""}
       ${state.meetings.slice().reverse().map(m => {
         const linkedTask = state.tasks.find(t => t.id === m.ticketId);
+        const meetUrl = m.link || generateGoogleMeetUrl();
+        const gcalUrl = getGoogleCalendarUrl(m);
         return `
         <div class="card">
-          <div class="row-between">
+          <div class="row-between" style="flex-wrap:wrap;gap:8px">
             <div>
-              <div style="font-weight:800;font-size:14px">${esc(m.title)}</div>
+              <div style="font-weight:800;font-size:14px;color:var(--text-primary)">${esc(m.title)}</div>
               <div class="mini" style="margin-top:2px">${m.date} · ${m.duration} min ${linkedTask ? `· Linked to: <b>${esc(linkedTask.title)}</b>` : ""}</div>
               ${m.participants?.length ? `<div class="mini" style="color:var(--text-muted);margin-top:2px">Attendees: ${m.participants.join(", ")}</div>` : ""}
             </div>
-            <button class="btn-icon" onclick="deleteMeeting('${m.id}')">🗑</button>
+            
+            <div class="row" style="gap:6px">
+              <a href="${meetUrl}" target="_blank" class="btn btn-blue" style="padding:5px 10px;font-size:11px;text-decoration:none">🎥 Join Google Meet</a>
+              <a href="${gcalUrl}" target="_blank" class="btn btn-green" style="padding:5px 10px;font-size:11px;text-decoration:none">📅 Add to Google Calendar</a>
+              <button class="btn btn-dark" style="padding:5px 9px;font-size:11px" onclick="downloadICSFile(${JSON.stringify(m).replace(/"/g, '&quot;')})">📥 .ics</button>
+              <button class="btn-icon" onclick="deleteMeeting('${m.id}')">🗑</button>
+            </div>
           </div>
           ${m.objective ? `<div class="mini" style="margin-top:8px"><b>Objective:</b> ${esc(m.objective)}</div>` : ""}
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px">
