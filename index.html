@@ -1946,9 +1946,6 @@ function render() {
         ${isAdmin ? `<button class="btn-icon" style="padding:2px 4px;font-size:11px" onclick="promptRenameBoard()" title="Rename Current Board (Admin)">✏️</button>` : ""}
       </div>
 
-      <!-- Archive Vault Button -->
-      <button class="theme-btn" onclick="setState({archiveOpen:true})" title="Open Accessible Archive Vault">📦 Vault (${state.archivedTasks.length})</button>
-
       <!-- Settings Button (ADMIN ONLY) -->
       ${isAdmin ? `<button class="theme-btn" onclick="setState({settingsOpen:true})">⚙️ Settings</button>` : ""}
 
