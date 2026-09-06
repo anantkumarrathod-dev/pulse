@@ -753,6 +753,28 @@ const DEFAULT_TAGS = [
   { id: "tag-research", name: "Research", color: "#10B981" }
 ];
 
+const DEMO_ACCOUNTS = [
+  { initials: "UN", name: "Platform Admin", email: "admin@pulse.io", pass: "admin123", role: "Platform Administrator", badge: "👑 Super Admin" },
+  { initials: "ASG", name: "Scrum Leadership", email: "scrum@pulse.io", pass: "scrum123", role: "Scrum Master", badge: "📊 Scrum Master" },
+  { initials: "AR", name: "Product Owner", email: "ar@pulse.io", pass: "user123", role: "Product Owner", badge: "👨‍💻 Product Lead" },
+  { initials: "RS", name: "Sales & Marketing", email: "rs@pulse.io", pass: "user123", role: "Employee", badge: "👩‍💼 Sales & Mktg" }
+];
+
+const DEFAULT_CLIENTS = [
+  { id: "client-1", name: "Internal Operations", code: "INT" },
+  { id: "client-2", name: "Ace Olympiad (Client)", code: "ACE" },
+  { id: "client-3", name: "Global Enterprise Corp", code: "GEC" }
+];
+
+const DEFAULT_BOARDS = [
+  { id: "board-1", clientId: "client-1", name: "Engineering & Product Roadmap" },
+  { id: "board-2", clientId: "client-1", name: "Sales & Marketing Growth" },
+  { id: "board-3", clientId: "client-1", name: "Finance & Operations" },
+  { id: "board-4", clientId: "client-1", name: "Executive Leadership Strategy" },
+  { id: "board-5", clientId: "client-2", name: "ACE Marketing & Media" },
+  { id: "board-6", clientId: "client-2", name: "ACE Event Logistics" }
+];
+
 // Restricted Confidential Roles (Administrator & Scrum Leadership)
 const CONFIDENTIAL_ROLES = ["UN", "ASG"];
 const PRIORITIES = ["P0", "P1", "P2", "P3"];
@@ -856,7 +878,7 @@ function seedTasks() {
     else if (r[3] === "WIP") { const d = new Date(today); d.setDate(d.getDate() + (i % 5)); dueDate = dateKey(d); }
     const sprint = i % 5 === 0 ? "Backlog" : i % 2 === 0 ? "Sprint 14 (Current)" : "Sprint 15 (Next)";
     return {
-      id: "t" + i, category: r[0], title: r[1], description: `Comprehensive execution requirements for ${r[1]}.`,
+      id: "t" + i, boardId: i % 2 === 0 ? "board-1" : "board-2", category: r[0], title: r[1], description: `Comprehensive execution requirements for ${r[1]}.`,
       priority: r[2], status: r[3], sprint, tags: r[4] || [],
       assignee: i % 3 === 0 ? "AR" : i % 3 === 1 ? "AJ" : "UN",
       contributor2: "Unassigned", reviewer: "ASG",
@@ -882,7 +904,11 @@ function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); 
 let state = {
   theme: load("pulse-theme", "obsidian"),
   sprintMode: load("pulse-sprint-mode-v1", "scrum"),
-  boardName: load("pulse-board-name-v1", "Main Project Board"),
+  authenticatedUser: load("pulse-auth-user-v1", DEMO_ACCOUNTS[0]),
+  clients: load("pulse-clients-v1", DEFAULT_CLIENTS),
+  boards: load("pulse-boards-v1", DEFAULT_BOARDS),
+  activeBoardId: load("pulse-active-board-v1", "board-1"),
+  archivedTasks: load("pulse-archived-tasks-v1", []),
   categories: load("pulse-categories", ["Projects", "Ops", "Ad hoc"]),
   statuses: load("pulse-statuses", ["To Do", "WIP", "Pending", "Due", "Done"]),
   wipLimits: load("pulse-wip-limits-v2", DEFAULT_WIP_LIMITS),
@@ -891,14 +917,14 @@ let state = {
   people: load("pulse-people-v1", DEFAULT_PEOPLE),
   roles: load("pulse-roles-v1", DEFAULT_ROLES),
   roleRates: load("pulse-role-rates", ROLE_RATES),
-  tasks: load("pulse-tasks-v6", null) || seedTasks(),
+  tasks: load("pulse-tasks-v7", null) || seedTasks(),
   meetings: load("pulse-meetings-v5", []),
   recharge: load("pulse-recharge-v5", {}),
   confidential: load("pulse-confidential-v5", {}),
   view: "board",
   boardMode: "kanban",
   selectedTaskIds: [],
-  viewer: "AR",
+  viewer: "UN",
   filterPerson: "All",
   filterCat: "All",
   filterSprint: "All",
@@ -908,10 +934,14 @@ let state = {
   detailTaskId: null,
   rebalanceModalPerson: null,
   settingsOpen: false,
+  archiveOpen: false,
   notifOpen: false,
   cmdOpen: false,
   cmdQuery: "",
   cmdSelectedIndex: 0,
+  loginEmailInput: "",
+  loginPassInput: "",
+  loginErrorMsg: "",
   draft: { title: "", description: "", category: "Projects", priority: "P1", sprint: "Sprint 14 (Current)", tags: [], assignee: "Unassigned", contributor2: "Unassigned", reviewer: "Unassigned", requiresApproval: false },
   meetingDraft: null,
   calWeek: 0,
@@ -941,26 +971,31 @@ function cycleTheme() {
 }
 
 function promptRenameBoard() {
-  const newName = prompt("Enter new Board Name:", state.boardName || "Main Project Board");
+  const currentBoard = state.boards.find(b => b.id === state.activeBoardId);
+  const newName = prompt("Enter new Board Name:", currentBoard ? currentBoard.name : "Main Project Board");
   if (newName && newName.trim()) {
-    state.boardName = newName.trim();
-    showToast(`Board renamed to "${state.boardName}"`, "📌");
+    if (currentBoard) currentBoard.name = newName.trim();
+    showToast(`Board renamed to "${newName.trim()}"`, "📌");
     render(); persist();
   }
 }
 
 function persist() {
   save("pulse-sprint-mode-v1", state.sprintMode);
-  save("pulse-board-name-v1", state.boardName);
+  save("pulse-auth-user-v1", state.authenticatedUser);
+  save("pulse-clients-v1", state.clients);
+  save("pulse-boards-v1", state.boards);
+  save("pulse-active-board-v1", state.activeBoardId);
+  save("pulse-archived-tasks-v1", state.archivedTasks);
   save("pulse-categories", state.categories);
   save("pulse-statuses", state.statuses);
-  save("pulse-wip-limits-v1", state.wipLimits);
+  save("pulse-wip-limits-v2", state.wipLimits);
   save("pulse-sprints-v1", state.sprints);
   save("pulse-tags-v1", state.tags);
   save("pulse-people-v1", state.people);
   save("pulse-roles-v1", state.roles);
   save("pulse-role-rates", state.roleRates);
-  save("pulse-tasks-v6", state.tasks);
+  save("pulse-tasks-v7", state.tasks);
   save("pulse-meetings-v5", state.meetings);
   save("pulse-recharge-v5", state.recharge);
   save("pulse-confidential-v5", state.confidential);
@@ -970,6 +1005,114 @@ function setState(patch, skipFullRender = false) {
   Object.assign(state, patch);
   if (!skipFullRender) render();
   persist();
+}
+
+function loginUser(account) {
+  state.authenticatedUser = account;
+  state.viewer = account.initials;
+  state.loginErrorMsg = "";
+  showToast(`Welcome back, ${account.name}! (${account.role})`, "👋");
+  render(); persist();
+}
+
+function handleLoginSubmit(e) {
+  if (e) e.preventDefault();
+  const email = (state.loginEmailInput || "").trim().toLowerCase();
+  const pass = (state.loginPassInput || "").trim();
+  const account = DEMO_ACCOUNTS.find(a => a.email.toLowerCase() === email && a.pass === pass);
+  if (account) {
+    loginUser(account);
+  } else {
+    state.loginErrorMsg = "Invalid email or password credentials!";
+    render();
+  }
+}
+
+function logoutUser() {
+  state.authenticatedUser = null;
+  state.loginEmailInput = "";
+  state.loginPassInput = "";
+  state.loginErrorMsg = "";
+  showToast("Signed out of Pulse", "🔒");
+  render(); persist();
+}
+
+function createNewBoard(clientId, name) {
+  const cleanName = name ? name.trim() : "";
+  if (!cleanName) return;
+  const clientBoards = state.boards.filter(b => b.clientId === clientId);
+  if (clientBoards.length >= 4) {
+    showToast("Client maximum limit of 4 boards reached!", "⚠️");
+    return;
+  }
+  const newBoard = {
+    id: "board-" + Date.now(),
+    clientId,
+    name: cleanName
+  };
+  state.boards.push(newBoard);
+  state.activeBoardId = newBoard.id;
+  showToast(`Created new board "${cleanName}"`, "🚀");
+  render(); persist();
+}
+
+function promptCreateBoard(targetClientId) {
+  const clientId = targetClientId || state.clients[0].id;
+  const targetClient = state.clients.find(c => c.id === clientId) || state.clients[0];
+  const clientBoards = state.boards.filter(b => b.clientId === targetClient.id);
+  if (clientBoards.length >= 4) {
+    showToast(`Maximum limit of 4 boards reached for client "${targetClient.name}"!`, "⚠️");
+    return;
+  }
+  const name = prompt(`Enter new Board Name for client "${targetClient.name}":`, "New Board");
+  if (name) createNewBoard(targetClient.id, name);
+}
+
+function archiveTask(taskId) {
+  const task = state.tasks.find(t => t.id === taskId);
+  if (!task) return;
+  state.tasks = state.tasks.filter(t => t.id !== taskId);
+  const archivedItem = {
+    ...task,
+    archivedAt: Date.now(),
+    archivedBy: state.viewer
+  };
+  state.archivedTasks.unshift(archivedItem);
+  if (state.detailTaskId === taskId) state.detailTaskId = null;
+  showToast(`Archived ticket: "${task.title}"`, "📦");
+  render(); persist();
+}
+
+function archiveDoneTasksForActiveBoard() {
+  const doneTasks = state.tasks.filter(t => (t.boardId || "board-1") === state.activeBoardId && t.status === "Done");
+  if (doneTasks.length === 0) {
+    showToast("No completed ('Done') tickets to archive on this board.", "ℹ️");
+    return;
+  }
+  const doneIds = doneTasks.map(t => t.id);
+  state.tasks = state.tasks.filter(t => !doneIds.includes(t.id));
+  const newArchived = doneTasks.map(t => ({ ...t, archivedAt: Date.now(), archivedBy: state.viewer }));
+  state.archivedTasks = [...newArchived, ...state.archivedTasks];
+  showToast(`Archived ${doneTasks.length} completed ticket(s)!`, "📦");
+  render(); persist();
+}
+
+function restoreArchivedTask(taskId) {
+  const task = state.archivedTasks.find(t => t.id === taskId);
+  if (!task) return;
+  state.archivedTasks = state.archivedTasks.filter(t => t.id !== taskId);
+  const restoredTask = { ...task };
+  delete restoredTask.archivedAt;
+  delete restoredTask.archivedBy;
+  state.tasks.unshift(restoredTask);
+  showToast(`Restored ticket "${task.title}" to active board!`, "✨");
+  render(); persist();
+}
+
+function deleteArchivedTask(taskId) {
+  state.archivedTasks = state.archivedTasks.filter(t => t.id !== taskId);
+  showToast("Permanently deleted archived ticket", "🗑");
+  render(); persist();
 }
 
 function getTaskCost(t) {
@@ -1234,7 +1377,7 @@ function addTask() {
   if (!d.title.trim()) return;
   const defaultSprint = state.sprintMode === "continuous" ? "Continuous Stream" : (d.sprint || state.sprints[0] || "Sprint 14 (Current)");
   const newTask = {
-    id: "t" + Date.now(), category: d.category, title: d.title.trim(), description: d.description || "",
+    id: "t" + Date.now(), boardId: state.activeBoardId, category: d.category, title: d.title.trim(), description: d.description || "",
     priority: d.priority, status: state.statuses[0] || "To Do", sprint: defaultSprint, tags: d.tags || [], assignee: d.assignee, contributor2: d.contributor2, reviewer: d.reviewer,
     estimateMins: PRIORITY_EST[d.priority], loggedMins: 0, timerStart: null, timerMode: "Online",
     subtasks: [], blockers: [], comments: [], activity: [{ ts: Date.now(), text: `[${state.viewer}] Ticket created` }],
@@ -1523,10 +1666,126 @@ function getUnreadNotifications() {
   return notifs;
 }
 
+function renderLoginScreen() {
+  return `
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg-base);padding:20px">
+    <div style="width:100%;max-width:540px;background:var(--bg-surface);border:1px solid var(--border);border-radius:20px;padding:32px;box-shadow:0 20px 40px rgba(0,0,0,0.4)">
+      <div style="text-align:center;margin-bottom:24px">
+        <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg, var(--blue), var(--purple));display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10" />
+            <line x1="12" y1="20" x2="12" y2="4" />
+            <line x1="6" y1="20" x2="6" y2="14" />
+            <path d="M3 16l6-6 4 4 7-7" />
+            <polyline points="16 7 20 7 20 11" />
+          </svg>
+        </div>
+        <h1 style="font-size:26px;font-weight:800;letter-spacing:-0.5px">Pulse</h1>
+        <p style="font-size:13px;color:var(--text-muted);margin-top:2px">Workforce Intelligence & Enterprise Portal</p>
+      </div>
+
+      <form onsubmit="handleLoginSubmit(event)" style="display:flex;flex-direction:column;gap:14px;margin-bottom:24px">
+        <div>
+          <label style="font-size:11.5px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px">Email Address</label>
+          <input class="txt" type="email" required style="width:100%;padding:10px 14px;font-size:13px" placeholder="admin@pulse.io" value="${esc(state.loginEmailInput)}" oninput="state.loginEmailInput=this.value">
+        </div>
+        <div>
+          <label style="font-size:11.5px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px">Password</label>
+          <input class="txt" type="password" required style="width:100%;padding:10px 14px;font-size:13px" placeholder="••••••••" value="${esc(state.loginPassInput)}" oninput="state.loginPassInput=this.value">
+        </div>
+        ${state.loginErrorMsg ? `<div style="font-size:12px;color:var(--red);background:rgba(239,68,68,0.1);padding:8px 12px;border-radius:8px;border:1px solid rgba(239,68,68,0.2)">⚠️ ${esc(state.loginErrorMsg)}</div>` : ""}
+        <button class="btn btn-blue" type="submit" style="padding:11px;justify-content:center;font-size:14px;font-weight:700;margin-top:4px">Sign In to Workspace</button>
+      </form>
+
+      <div style="border-top:1px solid var(--border);padding-top:20px">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;text-align:center">⚡ 1-Click Demo Logins (Credentials Included)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          ${DEMO_ACCOUNTS.map(acc => `
+            <div style="background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;transition:all 0.15s ease" onclick="loginUser(${JSON.stringify(acc).replace(/"/g, '&quot;')})">
+              <div class="row-between" style="margin-bottom:4px">
+                <b style="font-size:12px;color:var(--text-primary)">${esc(acc.name)}</b>
+                <span class="pill" style="font-size:9.5px;background:rgba(59,130,246,0.15);color:var(--blue)">${acc.badge}</span>
+              </div>
+              <div class="mini" style="color:var(--text-muted)">📧 ${acc.email}</div>
+              <div class="mini" style="color:var(--text-muted)">🔑 ${acc.pass}</div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderArchiveModal() {
+  const archived = state.archivedTasks;
+  return `
+  <div class="modal-backdrop" onclick="setState({archiveOpen:false})">
+    <div class="modal-window" style="max-width:840px" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="row">
+          <span style="font-size:16px">📦</span>
+          <b style="font-size:14px">Accessible Archive Vault (${archived.length} Historical Tickets)</b>
+        </div>
+        <button class="btn-icon" onclick="setState({archiveOpen:false})">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row-between" style="margin-bottom:12px">
+          <div class="mini">Completed tickets safely stored for long-term compliance, audit & analysis. Click restore to return any ticket to your active board.</div>
+          <button class="btn btn-green" style="padding:6px 12px;font-size:11.5px" onclick="archiveDoneTasksForActiveBoard()">📦 Archive Active Board's Done Tickets</button>
+        </div>
+
+        <div class="table-view-container" style="max-height:420px;overflow-y:auto">
+          <table class="pulse-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Priority</th>
+                <th>Owner</th>
+                <th>Category</th>
+                <th>Archived Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${archived.map(t => `
+                <tr>
+                  <td><b>${esc(t.title)}</b></td>
+                  <td><span class="pill" style="color:${PRIORITY_COLOR[t.priority]};background:${PRIORITY_COLOR[t.priority]}22">${t.priority}</span></td>
+                  <td><span class="avatar-chip">👤 ${t.assignee}</span></td>
+                  <td><span class="mini">${t.category}</span></td>
+                  <td><span class="mini">${t.archivedAt ? new Date(t.archivedAt).toLocaleDateString() : '—'}</span></td>
+                  <td>
+                    <div class="row" style="gap:6px">
+                      <button class="btn btn-green" style="padding:3px 8px;font-size:11px" onclick="restoreArchivedTask('${t.id}')">✨ Restore</button>
+                      <button class="btn-icon" style="color:var(--red)" onclick="deleteArchivedTask('${t.id}')">🗑</button>
+                    </div>
+                  </td>
+                </tr>
+              `).join("")}
+              ${archived.length === 0 ? `<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--text-muted)">No archived tickets in vault. Completed tickets can be archived anytime.</td></tr>` : ""}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-dark" onclick="setState({archiveOpen:false})">Close Vault</button>
+      </div>
+    </div>
+  </div>`;
+}
+
 // --- Main Render Logic ---
 function render() {
   applyTheme(state.theme);
-  const tasks = state.tasks;
+  if (!state.authenticatedUser) {
+    document.getElementById("app").innerHTML = renderLoginScreen();
+    return;
+  }
+
+  const tasks = state.tasks.filter(t => (t.boardId || "board-1") === state.activeBoardId);
+  const activeBoardObj = state.boards.find(b => b.id === state.activeBoardId) || state.boards[0];
   const isAdmin = CONFIDENTIAL_ROLES.includes(state.viewer);
   const totalTasks = tasks.length, doneTasks = tasks.filter(t => t.status === "Done").length;
   const wipTasks = tasks.filter(t => t.status === "WIP").length, dueTasks = tasks.filter(t => t.status === "Due" || t.status === "Pending").length;
@@ -1592,19 +1851,32 @@ function render() {
     </div>
 
     <div class="header-actions">
-      <!-- Board Name Badge -->
-      <div class="row" style="background:var(--bg-surface);border:1px solid var(--border);border-radius:9px;padding:5px 12px">
-        <span style="font-size:12px;font-weight:700;color:var(--blue)">📌 ${esc(state.boardName || "Main Project Board")}</span>
-        ${isAdmin ? `<button class="btn-icon" style="padding:2px 4px;font-size:11px;margin-left:4px" onclick="promptRenameBoard()" title="Rename Board (Admin)">✏️</button>` : ""}
+      <!-- Client & Multi-Board Selector -->
+      <div class="row" style="background:var(--bg-panel);border:1px solid var(--border);border-radius:9px;padding:3px 8px;gap:6px">
+        <span style="font-size:12px;font-weight:700;color:var(--blue)">📌 Board:</span>
+        <select class="sel" style="padding:3px 6px;font-size:12px;background:transparent;border:none" onchange="setState({activeBoardId:this.value})">
+          ${state.clients.map(cl => {
+            const clBoards = state.boards.filter(b => b.clientId === cl.id);
+            return `
+            <optgroup label="🏢 ${esc(cl.name)} (${clBoards.length}/4 Boards)">
+              ${clBoards.map(b => `<option value="${b.id}" ${b.id === state.activeBoardId ? 'selected' : ''}>${esc(b.name)}</option>`).join("")}
+            </optgroup>`;
+          }).join("")}
+        </select>
+        ${isAdmin ? `<button class="btn-icon" style="padding:2px 4px;font-size:11px" onclick="promptCreateBoard()" title="Create New Board (Max 4 per client)">+ Board</button>` : ""}
+        ${isAdmin ? `<button class="btn-icon" style="padding:2px 4px;font-size:11px" onclick="promptRenameBoard()" title="Rename Current Board (Admin)">✏️</button>` : ""}
       </div>
+
+      <!-- Archive Vault Button -->
+      <button class="theme-btn" onclick="setState({archiveOpen:true})" title="Open Accessible Archive Vault">📦 Vault (${state.archivedTasks.length})</button>
 
       <!-- Settings Button (ADMIN ONLY) -->
       ${isAdmin ? `<button class="theme-btn" onclick="setState({settingsOpen:true})">⚙️ Settings</button>` : ""}
 
       <div class="viewer-box">
-        <span class="mini" style="font-weight:600">Viewing as</span>
-        ${selectHtml("viewerSel", state.viewer, state.people.filter(p => p !== "Unassigned"), `setState({viewer:this.value})`)}
+        <span class="avatar-chip" style="color:var(--blue)">👤 ${state.viewer}</span>
         <span class="mini" style="color:var(--text-muted)">${state.roles[state.viewer] || '—'}</span>
+        <button class="btn-icon" style="padding:2px 6px;font-size:11px;color:var(--red)" onclick="logoutUser()" title="Sign Out">🔒 Exit</button>
       </div>
 
       <nav class="tabs">
@@ -1640,6 +1912,9 @@ function render() {
 
   <!-- Notifications Drawer -->
   ${state.notifOpen ? renderNotificationsDrawer(unreadNotifs) : ""}
+
+  <!-- Archive Vault Modal -->
+  ${state.archiveOpen ? renderArchiveModal() : ""}`;
 
   <!-- Command Palette Modal -->
   ${state.cmdOpen ? renderCommandPalette(isAdmin) : ""}
@@ -2086,7 +2361,8 @@ function renderDetailModalWrapper(t, isAdmin) {
         ${renderDetailModalBody(t, isAdmin)}
       </div>
 
-      <div class="modal-footer">
+      <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center">
+        <button class="btn btn-dark" style="color:var(--orange);border-color:var(--orange)" onclick="archiveTask('${t.id}')">📦 Archive Ticket</button>
         <button class="btn btn-dark" onclick="setState({detailTaskId:null})">Close</button>
       </div>
     </div>
@@ -2253,9 +2529,12 @@ function renderDetailModalBody(t, isAdmin) {
         </div>
       `).join("")}
     </div>
-    <div class="row">
-      <input class="txt" id="new-subtask-${t.id}" style="flex:1;padding:6px 10px;font-size:12px" placeholder="Add a subtask…" onkeydown="if(event.key==='Enter'){addSubtask('${t.id}',this.value);this.value=''}">
-      <button class="btn btn-dark" onclick="const el=document.getElementById('new-subtask-${t.id}');addSubtask('${t.id}',el.value);el.value=''">Add</button>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)">
+      <div class="mini" style="font-weight:700;color:var(--text-secondary);margin-bottom:4px">✍️ Manual Subtask Addition:</div>
+      <div class="row">
+        <input class="txt" id="new-subtask-${t.id}" style="flex:1;padding:7px 12px;font-size:12px" placeholder="Type new subtask item and press Enter or click + Add Subtask…" onkeydown="if(event.key==='Enter'){addSubtask('${t.id}',this.value);this.value=''}">
+        <button class="btn btn-green" onclick="const el=document.getElementById('new-subtask-${t.id}');addSubtask('${t.id}',el.value);el.value=''">+ Add Subtask</button>
+      </div>
     </div>
   </div>
 
@@ -2309,6 +2588,37 @@ function renderSettingsModal() {
           <div class="row">
             <input class="txt" id="boardNameInput" style="flex:1;padding:6px 10px;font-size:12px" value="${esc(state.boardName || 'Main Project Board')}" placeholder="e.g. Engineering & Product Roadmap…">
             <button class="btn btn-green" onclick="const name=document.getElementById('boardNameInput').value;if(name.trim()){state.boardName=name.trim();render();persist();showToast('Board name updated!','📌')}">Save Name</button>
+          </div>
+        </div>
+
+        <!-- Client & Multi-Board Architecture Manager (Max 4 Boards / Client) -->
+        <div class="card" style="background:rgba(168,85,247,0.05);border-color:rgba(168,85,247,0.2)">
+          <b style="font-size:13px;color:var(--purple);margin-bottom:4px;display:block">🏢 Clients & Dedicated Boards Manager</b>
+          <div class="mini" style="margin-bottom:12px">Create separate boards for Sales & Marketing, Finance, Ops, or specific clients (Enforces max 4 boards per client).</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">
+            ${state.clients.map(cl => {
+              const clBoards = state.boards.filter(b => b.clientId === cl.id);
+              const isMaxed = clBoards.length >= 4;
+              return `
+              <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;padding:10px">
+                <div class="row-between" style="margin-bottom:6px">
+                  <b style="font-size:12.5px;color:var(--text-primary)">🏢 ${esc(cl.name)} (${esc(cl.code)})</b>
+                  <span class="pill" style="font-size:10px;background:${isMaxed ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)'};color:${isMaxed ? 'var(--red)' : 'var(--green)'}">
+                    ${clBoards.length} / 4 Boards ${isMaxed ? '(Max Reached)' : ''}
+                  </span>
+                </div>
+                <div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">
+                  ${clBoards.map(b => `
+                    <span class="pill" style="background:var(--bg-panel-elevated);color:var(--text-primary);border:1px solid var(--border);padding:4px 8px;font-size:11px">
+                      📌 ${esc(b.name)}
+                    </span>
+                  `).join("")}
+                </div>
+                ${!isMaxed ? `
+                  <button class="btn btn-purple" style="padding:4px 9px;font-size:11px" onclick="promptCreateBoard('${cl.id}')">+ Add Board to ${esc(cl.name)}</button>
+                ` : ""}
+              </div>`;
+            }).join("")}
           </div>
         </div>
 
