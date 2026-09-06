@@ -904,7 +904,7 @@ function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); 
 let state = {
   theme: load("pulse-theme", "obsidian"),
   sprintMode: load("pulse-sprint-mode-v1", "scrum"),
-  authenticatedUser: load("pulse-auth-user-v1", DEMO_ACCOUNTS[0]),
+  authenticatedUser: load("pulse-auth-user-v1", null) || DEMO_ACCOUNTS[0],
   clients: load("pulse-clients-v1", DEFAULT_CLIENTS),
   boards: load("pulse-boards-v1", DEFAULT_BOARDS),
   activeBoardId: load("pulse-active-board-v1", "board-1"),
@@ -1013,6 +1013,11 @@ function loginUser(account) {
   state.loginErrorMsg = "";
   showToast(`Welcome back, ${account.name}! (${account.role})`, "👋");
   render(); persist();
+}
+
+function loginUserByInitials(initials) {
+  const account = DEMO_ACCOUNTS.find(a => a.initials === initials) || DEMO_ACCOUNTS[0];
+  loginUser(account);
 }
 
 function handleLoginSubmit(e) {
@@ -1701,7 +1706,7 @@ function renderLoginScreen() {
         <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;text-align:center">⚡ 1-Click Demo Logins (Credentials Included)</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           ${DEMO_ACCOUNTS.map(acc => `
-            <div style="background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;transition:all 0.15s ease" onclick="loginUser(${JSON.stringify(acc).replace(/"/g, '&quot;')})">
+            <div style="background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;transition:all 0.15s ease" onclick="loginUserByInitials('${acc.initials}')">
               <div class="row-between" style="margin-bottom:4px">
                 <b style="font-size:12px;color:var(--text-primary)">${esc(acc.name)}</b>
                 <span class="pill" style="font-size:9.5px;background:rgba(59,130,246,0.15);color:var(--blue)">${acc.badge}</span>
