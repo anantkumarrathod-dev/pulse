@@ -1882,7 +1882,8 @@ function render() {
     ["meetings", "Meetings"],
     ["flowmap", "🔗 Flow Map"],
     ["dashboard", "Dashboard"],
-    ["reports", "Reports"]
+    ["reports", "Reports"],
+    ["vault", "📦 Vault"]
   ];
   if (isAdmin) TABS.push(["confidential", "🔒 Confidential"]);
 
@@ -2110,8 +2111,56 @@ function renderView(isAdmin) {
   if (state.view === "flowmap") return renderFlowMap();
   if (state.view === "dashboard") return renderDashboard();
   if (state.view === "reports") return renderReports(isAdmin);
+  if (state.view === "vault") return renderArchiveVaultPage();
   if (state.view === "confidential" && isAdmin) return renderConfidential();
   return "";
+}
+
+function renderArchiveVaultPage() {
+  const archived = state.archivedTasks;
+  return `
+  <div>
+    <div class="row-between" style="margin-bottom:16px">
+      <div>
+        <b style="font-size:16px">📦 Accessible Archive Vault (${archived.length} Historical Tickets)</b>
+        <div class="mini">Completed tickets safely stored for long-term compliance, audit & retrospective analysis</div>
+      </div>
+      <button class="btn btn-green" onclick="archiveDoneTasksForActiveBoard()">📦 Archive Current Board's Done Tickets</button>
+    </div>
+
+    <div class="table-view-container">
+      <table class="pulse-table">
+        <thead>
+          <tr>
+            <th>Ticket Title</th>
+            <th>Priority</th>
+            <th>Owner</th>
+            <th>Category</th>
+            <th>Archived Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${archived.map(t => `
+            <tr>
+              <td><b>${esc(t.title)}</b></td>
+              <td><span class="pill" style="color:${PRIORITY_COLOR[t.priority]};background:${PRIORITY_COLOR[t.priority]}22">${t.priority}</span></td>
+              <td><span class="avatar-chip">👤 ${t.assignee}</span></td>
+              <td><span class="mini">${t.category}</span></td>
+              <td><span class="mini">${t.archivedAt ? new Date(t.archivedAt).toLocaleDateString() : '—'}</span></td>
+              <td>
+                <div class="row" style="gap:6px">
+                  <button class="btn btn-green" style="padding:4px 9px;font-size:11px" onclick="restoreArchivedTask('${t.id}')">✨ Restore to Board</button>
+                  <button class="btn-icon" style="color:var(--red)" onclick="deleteArchivedTask('${t.id}')">🗑</button>
+                </div>
+              </td>
+            </tr>
+          `).join("")}
+          ${archived.length === 0 ? `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted)">No archived tickets in vault. Completed tickets can be archived anytime.</td></tr>` : ""}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
 }
 
 // --- Board View ---
@@ -3023,6 +3072,7 @@ window.addEventListener("keydown", (e) => {
     else if (e.key === "m" || e.key === "M") { setState({ view: "meetings" }); }
     else if (e.key === "d" || e.key === "D") { setState({ view: "dashboard" }); }
     else if (e.key === "r" || e.key === "R") { setState({ view: "reports" }); }
+    else if (e.key === "v" || e.key === "V") { setState({ view: "vault" }); }
   }
 });
 
