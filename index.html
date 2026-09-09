@@ -767,12 +767,7 @@ const DEFAULT_CLIENTS = [
 ];
 
 const DEFAULT_BOARDS = [
-  { id: "board-1", clientId: "client-1", name: "Engineering & Product Roadmap" },
-  { id: "board-2", clientId: "client-1", name: "Sales & Marketing Growth" },
-  { id: "board-3", clientId: "client-1", name: "Finance & Operations" },
-  { id: "board-4", clientId: "client-1", name: "Executive Leadership Strategy" },
-  { id: "board-5", clientId: "client-2", name: "ACE Marketing & Media" },
-  { id: "board-6", clientId: "client-2", name: "ACE Event Logistics" }
+  { id: "board-1", name: "Main Board" }
 ];
 
 // Restricted Confidential Roles (Administrator & Scrum Leadership)
@@ -878,7 +873,7 @@ function seedTasks() {
     else if (r[3] === "WIP") { const d = new Date(today); d.setDate(d.getDate() + (i % 5)); dueDate = dateKey(d); }
     const sprint = i % 5 === 0 ? "Backlog" : i % 2 === 0 ? "Sprint 14 (Current)" : "Sprint 15 (Next)";
     return {
-      id: "t" + i, boardId: i % 2 === 0 ? "board-1" : "board-2", category: r[0], title: r[1], description: `Comprehensive execution requirements for ${r[1]}.`,
+      id: "t" + i, boardId: "board-1", category: r[0], title: r[1], description: `Comprehensive execution requirements for ${r[1]}.`,
       priority: r[2], status: r[3], sprint, tags: r[4] || [],
       assignee: i % 3 === 0 ? "AR" : i % 3 === 1 ? "AJ" : "UN",
       contributor2: "Unassigned", reviewer: "ASG",
@@ -906,8 +901,8 @@ let state = {
   sprintMode: load("pulse-sprint-mode-v1", "scrum"),
   authenticatedUser: load("pulse-auth-user-v1", null) || DEMO_ACCOUNTS[0],
   clients: load("pulse-clients-v1", DEFAULT_CLIENTS),
-  boards: load("pulse-boards-v1", DEFAULT_BOARDS),
-  activeBoardId: load("pulse-active-board-v1", "board-1"),
+  boards: load("pulse-boards-v2", DEFAULT_BOARDS),
+  activeBoardId: load("pulse-active-board-v2", "board-1"),
   archivedTasks: load("pulse-archived-tasks-v1", []),
   categories: load("pulse-categories", ["Projects", "Ops", "Ad hoc"]),
   statuses: load("pulse-statuses", ["To Do", "WIP", "Pending", "Due", "Done"]),
@@ -917,7 +912,7 @@ let state = {
   people: load("pulse-people-v1", DEFAULT_PEOPLE),
   roles: load("pulse-roles-v1", DEFAULT_ROLES),
   roleRates: load("pulse-role-rates", ROLE_RATES),
-  tasks: load("pulse-tasks-v7", null) || seedTasks(),
+  tasks: load("pulse-tasks-v8", null) || seedTasks(),
   meetings: load("pulse-meetings-v5", []),
   recharge: load("pulse-recharge-v5", {}),
   confidential: load("pulse-confidential-v5", {}),
@@ -984,8 +979,8 @@ function persist() {
   save("pulse-sprint-mode-v1", state.sprintMode);
   save("pulse-auth-user-v1", state.authenticatedUser);
   save("pulse-clients-v1", state.clients);
-  save("pulse-boards-v1", state.boards);
-  save("pulse-active-board-v1", state.activeBoardId);
+  save("pulse-boards-v2", state.boards);
+  save("pulse-active-board-v2", state.activeBoardId);
   save("pulse-archived-tasks-v1", state.archivedTasks);
   save("pulse-categories", state.categories);
   save("pulse-statuses", state.statuses);
@@ -995,7 +990,7 @@ function persist() {
   save("pulse-people-v1", state.people);
   save("pulse-roles-v1", state.roles);
   save("pulse-role-rates", state.roleRates);
-  save("pulse-tasks-v7", state.tasks);
+  save("pulse-tasks-v8", state.tasks);
   save("pulse-meetings-v5", state.meetings);
   save("pulse-recharge-v5", state.recharge);
   save("pulse-confidential-v5", state.confidential);
@@ -1042,17 +1037,11 @@ function logoutUser() {
   render(); persist();
 }
 
-function createNewBoard(clientId, name) {
+function createNewBoard(name) {
   const cleanName = name ? name.trim() : "";
   if (!cleanName) return;
-  const clientBoards = state.boards.filter(b => b.clientId === clientId);
-  if (clientBoards.length >= 4) {
-    showToast("Client maximum limit of 4 boards reached!", "⚠️");
-    return;
-  }
   const newBoard = {
     id: "board-" + Date.now(),
-    clientId,
     name: cleanName
   };
   state.boards.push(newBoard);
@@ -1061,16 +1050,9 @@ function createNewBoard(clientId, name) {
   render(); persist();
 }
 
-function promptCreateBoard(targetClientId) {
-  const clientId = targetClientId || state.clients[0].id;
-  const targetClient = state.clients.find(c => c.id === clientId) || state.clients[0];
-  const clientBoards = state.boards.filter(b => b.clientId === targetClient.id);
-  if (clientBoards.length >= 4) {
-    showToast(`Maximum limit of 4 boards reached for client "${targetClient.name}"!`, "⚠️");
-    return;
-  }
-  const name = prompt(`Enter new Board Name for client "${targetClient.name}":`, "New Board");
-  if (name) createNewBoard(targetClient.id, name);
+function promptCreateBoard() {
+  const name = prompt("Enter new Board Name:", "New Board");
+  if (name && name.trim()) createNewBoard(name.trim());
 }
 
 function archiveTask(taskId) {
@@ -1930,20 +1912,14 @@ function render() {
     </div>
 
     <div class="header-actions">
-      <!-- Client & Multi-Board Selector -->
+      <!-- Board Selector & New Board Creation -->
       <div class="row" style="background:var(--bg-panel);border:1px solid var(--border);border-radius:9px;padding:3px 8px;gap:6px">
         <span style="font-size:12px;font-weight:700;color:var(--blue)">📌 Board:</span>
         <select class="sel" style="padding:3px 6px;font-size:12px;background:transparent;border:none" onchange="setState({activeBoardId:this.value})">
-          ${state.clients.map(cl => {
-            const clBoards = state.boards.filter(b => b.clientId === cl.id);
-            return `
-            <optgroup label="🏢 ${esc(cl.name)} (${clBoards.length}/4 Boards)">
-              ${clBoards.map(b => `<option value="${b.id}" ${b.id === state.activeBoardId ? 'selected' : ''}>${esc(b.name)}</option>`).join("")}
-            </optgroup>`;
-          }).join("")}
+          ${state.boards.map(b => `<option value="${b.id}" ${b.id === state.activeBoardId ? 'selected' : ''}>${esc(b.name)}</option>`).join("")}
         </select>
-        ${isAdmin ? `<button class="btn-icon" style="padding:2px 4px;font-size:11px" onclick="promptCreateBoard()" title="Create New Board (Max 4 per client)">+ Board</button>` : ""}
-        ${isAdmin ? `<button class="btn-icon" style="padding:2px 4px;font-size:11px" onclick="promptRenameBoard()" title="Rename Current Board (Admin)">✏️</button>` : ""}
+        <button class="btn btn-blue" style="padding:3px 8px;font-size:11px" onclick="promptCreateBoard()" title="Create Completely New Board">+ New Board</button>
+        ${isAdmin ? `<button class="btn-icon" style="padding:2px 6px;font-size:11px" onclick="promptRenameBoard()" title="Rename Current Board">✏️</button>` : ""}
       </div>
 
       <!-- Settings Button (ADMIN ONLY) -->
@@ -2715,35 +2691,21 @@ function renderSettingsModal() {
           </div>
         </div>
 
-        <!-- Client & Multi-Board Architecture Manager (Max 4 Boards / Client) -->
+        <!-- Dynamic Workspace Boards Manager -->
         <div class="card" style="background:rgba(168,85,247,0.05);border-color:rgba(168,85,247,0.2)">
-          <b style="font-size:13px;color:var(--purple);margin-bottom:4px;display:block">🏢 Clients & Dedicated Boards Manager</b>
-          <div class="mini" style="margin-bottom:12px">Create separate boards for Sales & Marketing, Finance, Ops, or specific clients (Enforces max 4 boards per client).</div>
-          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">
-            ${state.clients.map(cl => {
-              const clBoards = state.boards.filter(b => b.clientId === cl.id);
-              const isMaxed = clBoards.length >= 4;
-              return `
-              <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;padding:10px">
-                <div class="row-between" style="margin-bottom:6px">
-                  <b style="font-size:12.5px;color:var(--text-primary)">🏢 ${esc(cl.name)} (${esc(cl.code)})</b>
-                  <span class="pill" style="font-size:10px;background:${isMaxed ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)'};color:${isMaxed ? 'var(--red)' : 'var(--green)'}">
-                    ${clBoards.length} / 4 Boards ${isMaxed ? '(Max Reached)' : ''}
-                  </span>
+          <b style="font-size:13px;color:var(--purple);margin-bottom:4px;display:block">📌 Workspace Boards Manager</b>
+          <div class="mini" style="margin-bottom:12px">Create clean, separate workspace boards for your projects or teams.</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+            ${state.boards.map(b => `
+              <div class="row-between" style="background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px">
+                <span style="font-size:12.5px;font-weight:600;color:var(--text-primary)">📌 ${esc(b.name)} ${b.id === state.activeBoardId ? '<span class="pill" style="font-size:10px;background:rgba(59,130,246,0.2);color:var(--blue);margin-left:6px">Active</span>' : ''}</span>
+                <div class="row" style="gap:6px">
+                  ${b.id !== state.activeBoardId ? `<button class="btn btn-secondary" style="padding:2px 8px;font-size:11px" onclick="setState({activeBoardId:'${b.id}'})">Switch</button>` : ''}
                 </div>
-                <div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">
-                  ${clBoards.map(b => `
-                    <span class="pill" style="background:var(--bg-panel-elevated);color:var(--text-primary);border:1px solid var(--border);padding:4px 8px;font-size:11px">
-                      📌 ${esc(b.name)}
-                    </span>
-                  `).join("")}
-                </div>
-                ${!isMaxed ? `
-                  <button class="btn btn-purple" style="padding:4px 9px;font-size:11px" onclick="promptCreateBoard('${cl.id}')">+ Add Board to ${esc(cl.name)}</button>
-                ` : ""}
-              </div>`;
-            }).join("")}
+              </div>
+            `).join("")}
           </div>
+          <button class="btn btn-purple" style="padding:5px 12px;font-size:11px" onclick="promptCreateBoard()">+ Create New Board</button>
         </div>
 
         <!-- Workflow Methodology Mode (Scrum vs Continuous Flow) -->
